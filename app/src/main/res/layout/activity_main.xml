@@ -1,116 +1,23 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:gravity="center_horizontal"
-    tools:context=".MainActivity">
+    tools:context=".ui.home.HomeActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="SilentHelp"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bottom_navigation" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Protección discreta de emergencia"
-        android:textSize="14sp"
-        android:layout_marginBottom="24dp"/>
-
-    <LinearLayout
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:background="@drawable/card_background"
-        android:padding="24dp"
-        android:layout_marginBottom="24dp">
+        android:layout_alignParentBottom="true"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu" />
 
-        <ImageView
-            android:id="@+id/iv_status_icon"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:src="@drawable/ic_shield_off"
-            app:tint="@android:color/darker_gray"
-            android:layout_marginBottom="16dp"/>
-
-        <TextView
-            android:id="@+id/tv_status_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sistema desarmado"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"/>
-
-        <TextView
-            android:id="@+id/tv_status_subtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Activa el sistema para estar protegido"
-            android:gravity="center"
-            android:layout_marginBottom="16dp"/>
-
-        <Button
-            android:id="@+id/btn_arm_system"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Armar sistema"
-            android:backgroundTint="@android:color/black"
-            android:textColor="@android:color/white"/>
-        <Button
-            android:id="@+id/btn_deactivate_system"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Desactivar sistema"
-            android:backgroundTint="@android:color/darker_gray"
-            android:textColor="@android:color/white"
-            android:visibility="gone"
-            android:layout_marginTop="8dp"/>
-        <Button
-            android:id="@+id/btn_activate_alert"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Activar alarma de emergencia"
-            android:backgroundTint="@android:color/holo_red_dark"
-            android:textColor="@android:color/white"
-            android:visibility="gone"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="8dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Contactos de Emergencia"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/btn_add_contact"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="+ Agregar"
-            android:textAllCaps="false"/>
-    </LinearLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_emergency_contacts"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        tools:listitem="@layout/item_contact"/>
-
-</LinearLayout>
+</RelativeLayout>
