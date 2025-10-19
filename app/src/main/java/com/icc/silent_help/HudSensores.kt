@@ -8,7 +8,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.core.app.ActivityCompat
 
-// El nombre de la clase ha sido cambiado a HudSensores
+
 class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerListener {
 
     // --- Handlers de Lógica ---
@@ -19,7 +19,7 @@ class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerLi
     private lateinit var locationAddressTextView: TextView
     private lateinit var locationPrecisionTextView: TextView
     private lateinit var stopAlertButton: Button
-    // ... agregar otras vistas que necesites controlar
+
 
     companion object {
         private const val REQUEST_PERMISSIONS_CODE = 123
@@ -37,13 +37,14 @@ class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerLi
         locationAddressTextView = findViewById(R.id.locationAddressTextView)
         locationPrecisionTextView = findViewById(R.id.locationPrecisionTextView)
         stopAlertButton = findViewById(R.id.stopAlertButton)
-        // ... vincular otras vistas
 
         // Configurar Listeners de botones
         stopAlertButton.setOnClickListener {
             audioHandler.stopRecording()
             // Lógica para detener la alerta
             Toast.makeText(this, "Alerta Detenida", Toast.LENGTH_SHORT).show()
+
+            finish()
         }
 
         // Iniciar el proceso de alerta
@@ -81,12 +82,12 @@ class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerLi
     // --- Callbacks de AudioHandlerListener ---
     override fun onRecordingStarted() {
         Toast.makeText(this, "Grabación de evidencia iniciada", Toast.LENGTH_SHORT).show()
-        // Aquí podrías actualizar la UI para mostrar que está grabando (ej. cambiar un ícono)
+
     }
 
     override fun onRecordingStopped(filePath: String) {
         Toast.makeText(this, "Evidencia de audio guardada", Toast.LENGTH_SHORT).show()
-        // Aquí podrías habilitar un botón para reproducir la evidencia si fuera necesario
+
     }
 
     override fun onPlayingStarted() { /* No se usa en esta pantalla */ }
