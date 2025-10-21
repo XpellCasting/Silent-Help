@@ -32,6 +32,16 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.register.RegisterStep1Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.register.RegisterStep2Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.register.RegisterStep3Activity"
+            android:exported="false" />
+
         <!-- Actividad de la Alerta (Pantalla de Sensores) -->
         <activity
             android:name=".HudSensores"
