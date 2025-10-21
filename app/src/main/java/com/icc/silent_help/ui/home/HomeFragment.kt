@@ -1,5 +1,6 @@
 package com.icc.silent_help.ui.home
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.icc.silent_help.ContactsAdapter
 import com.icc.silent_help.EmergencyContact
+import com.icc.silent_help.HudSensores
 import com.icc.silent_help.R
 
 class HomeFragment : Fragment() {
@@ -54,6 +56,15 @@ class HomeFragment : Fragment() {
             isSystemArmed = false
             updateSystemStatusUI()
         }
+
+        // --- INICIO DE LA MODIFICACIÓN ---
+        // Lógica para el botón de activar alarma
+        btnActivateAlert.setOnClickListener {
+            // Crea un Intent para abrir la actividad HudSensores
+            val intent = Intent(activity, HudSensores::class.java)
+            startActivity(intent)
+        }
+        // --- FIN DE LA MODIFICACIÓN ---
 
         updateSystemStatusUI()
         setupContactsRecyclerView()
