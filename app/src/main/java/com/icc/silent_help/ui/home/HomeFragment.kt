@@ -16,6 +16,7 @@ import com.icc.silent_help.ContactsAdapter
 import com.icc.silent_help.EmergencyContact
 import com.icc.silent_help.HudSensores
 import com.icc.silent_help.R
+import com.icc.silent_help.ui.register.RegisterStep1Activity
 
 class HomeFragment : Fragment() {
 
@@ -28,6 +29,7 @@ class HomeFragment : Fragment() {
     private lateinit var btnActivateAlert: Button
     private lateinit var rvEmergencyContacts: RecyclerView
     private lateinit var btnDeactivateSystem: Button
+    private lateinit var btnRegisterTemp: Button
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,6 +49,7 @@ class HomeFragment : Fragment() {
         btnActivateAlert = view.findViewById(R.id.btn_activate_alert)
         rvEmergencyContacts = view.findViewById(R.id.rv_emergency_contacts)
         btnDeactivateSystem = view.findViewById(R.id.btn_deactivate_system)
+        btnRegisterTemp = view.findViewById(R.id.btn_register_temp)
 
         btnArmSystem.setOnClickListener {
             isSystemArmed = true
@@ -57,14 +60,15 @@ class HomeFragment : Fragment() {
             updateSystemStatusUI()
         }
 
-        // --- INICIO DE LA MODIFICACIÓN ---
-        // Lógica para el botón de activar alarma
         btnActivateAlert.setOnClickListener {
-            // Crea un Intent para abrir la actividad HudSensores
             val intent = Intent(activity, HudSensores::class.java)
             startActivity(intent)
         }
-        // --- FIN DE LA MODIFICACIÓN ---
+
+        btnRegisterTemp.setOnClickListener {
+            val intent = Intent(activity, RegisterStep1Activity::class.java)
+            startActivity(intent)
+        }
 
         updateSystemStatusUI()
         setupContactsRecyclerView()
