@@ -1,26 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#F0F2F5"
     tools:context=".ui.history.HistoryFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="30dp"/>
-
-
-    <!-- Cabecera Principal -->
-    <LinearLayout
-        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
         android:orientation="vertical"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp">
+        android:padding="16dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -28,23 +18,17 @@
             android:text="SilentHelp"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="@android:color/black" />
+            android:layout_gravity="center_horizontal"
+            android:paddingTop="36dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Protección discreta de emergencia"
             android:textSize="14sp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="24dp"
             android:textColor="@android:color/darker_gray"/>
-    </LinearLayout>
-
-    <!-- Cabecera de la lista -->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="8dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -67,17 +51,14 @@
             android:textAllCaps="false"
             app:icon="@android:drawable/ic_menu_sort_by_size" />
 
-    </RelativeLayout>
+        <!-- Lista de Alertas -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_alert_history"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            tools:listitem="@layout/item_alert_history"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
-    <!-- Lista de Alertas -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_alert_history"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        tools:listitem="@layout/item_alert_history"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>

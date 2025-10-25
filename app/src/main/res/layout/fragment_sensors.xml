@@ -26,7 +26,8 @@
             android:text="Protección discreta de emergencia"
             android:textSize="14sp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="24dp"/>
+            android:layout_marginBottom="24dp"
+            android:textColor="@android:color/darker_gray"/>
 
         <!-- Sensores Principales -->
         <TextView
