@@ -79,25 +79,27 @@
                 android:text="Hemos enviado un código de verificación a:" />
 
             <TextView
+                android:id="@+id/phoneNumberText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
                 android:text="569-444-8433"
-                android:textStyle="bold"
                 android:textSize="16sp"
-                android:layout_marginBottom="16dp"/>
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Código de Verificación"/>
-            
+
             <EditText
+                android:id="@+id/vericationCode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center"
                 android:hint="000000"
                 android:inputType="number"
-                android:maxLength="6"
-                android:gravity="center"/>
+                android:maxLength="6" />
 
             <Button
                 style="@style/Widget.MaterialComponents.Button.TextButton"
