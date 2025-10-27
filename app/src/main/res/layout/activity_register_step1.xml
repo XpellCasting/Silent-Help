@@ -77,6 +77,7 @@
                 android:text="Nombre Completo *" />
 
             <EditText
+                android:id="@+id/userFullName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Tu nombre completo" />
@@ -88,6 +89,7 @@
                 android:text="Número de Teléfono *" />
 
             <EditText
+                android:id="@+id/userPhoneNumber"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="+1 234 567 8900"
@@ -106,16 +108,18 @@
                 android:text="Email (Opcional)" />
 
             <EditText
+                android:id="@+id/userEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="tu@email.com"
                 android:inputType="textEmailAddress" />
 
             <CheckBox
+                android:id="@+id/termCheckBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Acepto los términos y condiciones de uso *"/>
+                android:text="Acepto los términos y condiciones de uso *" />
 
             <LinearLayout
                 android:layout_width="match_parent"

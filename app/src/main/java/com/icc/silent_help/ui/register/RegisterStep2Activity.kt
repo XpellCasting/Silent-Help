@@ -2,19 +2,100 @@ package com.icc.silent_help.ui.register
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.icc.silent_help.R
+import com.icc.silent_help.databinding.ActivityRegisterStep2Binding
+import com.icc.silent_help.utils.HttpHelper
+import org.json.JSONObject
+import android.util.Log
+import kotlin.math.log
 
 class RegisterStep2Activity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityRegisterStep2Binding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_register_step2)
 
-        val btnVerifyCode: Button = findViewById(R.id.btn_verify_code)
-        btnVerifyCode.setOnClickListener {
-            val intent = Intent(this, RegisterStep3Activity::class.java)
-            startActivity(intent)
+        // ✅ Inicializar binding y establecer la vista raíz
+        binding = ActivityRegisterStep2Binding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // ✅ Recuperar datos desde la Activity anterior
+        val nombre = intent.getStringExtra("nombre") ?: ""
+        val telefono = intent.getStringExtra("telefono") ?: ""
+
+        // ✅ Mostrar número en la interfaz
+        binding.phoneNumberText.text =
+            if (telefono.isNotBlank()) telefono else "Número no disponible"
+
+
+        // ✅ Acción del botón “Verificar código”
+        binding.btnVerifyCode.setOnClickListener {
+            val codigo = binding.vericationCode.text.toString().trim()
+
+            if (codigo.isEmpty()) {
+                Toast.makeText(
+                    this,
+                    "Por favor ingresa el código de verificación",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
+            // ✅ Enviar el código al backend para verificación
+            verificarCodigoConBackend(telefono, codigo) { verificado ->
+
+                if (verificado) {
+                    // ✅ Si es correcto, pasar a la siguiente Activity
+                    val intent = Intent(this, RegisterStep3Activity::class.java).apply {
+                        putExtra("nombre", nombre)
+                        putExtra("telefono", telefono)
+                        putExtra("codigo", codigo)
+                    }
+                    startActivity(intent)
+                } else {
+                    Toast.makeText(
+                        this,
+                        "Código incorrecto o expirado",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
+
+
+    /**
+     * 🔹 Envía el código ingresado al backend para validarlo
+     */
+    private fun verificarCodigoConBackend(
+        telefono: String,
+        codigo: String,
+        callback: (Boolean) -> Unit
+    ) {
+        val data = JSONObject().apply {
+            put("telefono", telefono)
+            put("codigo", codigo)
+        }
+
+        Log.d("DEBUG", data.toString())
+
+        HttpHelper.post(
+            url = "http://10.0.2.2:3000/api/user/verify-code", // ✅ Endpoint de verificación
+            data = data
+        ) { success, response ->
+            runOnUiThread {
+                if (success) {
+                    // Aquí podrías analizar la respuesta JSON si tu backend devuelve algo como { valid: true }
+                    Toast.makeText(this, "Código verificado correctamente", Toast.LENGTH_SHORT).show()
+                    callback(true)
+                } else {
+                    Toast.makeText(this, "Error al verificar código: $response", Toast.LENGTH_LONG).show()
+                    callback(false)
+                }
+            }
         }
     }
 }
