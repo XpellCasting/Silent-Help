@@ -1,12 +1,17 @@
 package com.icc.silent_help
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.core.app.ActivityCompat
+import com.google.android.material.chip.Chip
+import java.util.concurrent.TimeUnit
 
 
 class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerListener {
@@ -19,7 +24,12 @@ class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerLi
     private lateinit var locationAddressTextView: TextView
     private lateinit var locationPrecisionTextView: TextView
     private lateinit var stopAlertButton: Button
+    private lateinit var timerChip: Chip
 
+    // --- Variables para el temporizador ---
+    private val timerHandler = Handler(Looper.getMainLooper())
+    private lateinit var timerRunnable: Runnable
+    private var startTime: Long = 0
 
     companion object {
         private const val REQUEST_PERMISSIONS_CODE = 123
@@ -37,13 +47,14 @@ class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerLi
         locationAddressTextView = findViewById(R.id.locationAddressTextView)
         locationPrecisionTextView = findViewById(R.id.locationPrecisionTextView)
         stopAlertButton = findViewById(R.id.stopAlertButton)
+        timerChip = findViewById(R.id.timerChip)
 
         // Configurar Listeners de botones
         stopAlertButton.setOnClickListener {
+            stopTimer()
             audioHandler.stopRecording()
             // Lógica para detener la alerta
             Toast.makeText(this, "Alerta Detenida", Toast.LENGTH_SHORT).show()
-
             finish()
         }
 
@@ -57,6 +68,7 @@ class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerLi
             // Si ya tenemos permisos, iniciar todo
             locationHandler.requestLocation()
             audioHandler.startRecording()
+            startTimer()
         } else {
             // Si no, pedirlos
             ActivityCompat.requestPermissions(this, permissions, REQUEST_PERMISSIONS_CODE)
@@ -65,6 +77,36 @@ class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerLi
 
     private fun hasAudioPermission(): Boolean {
         return ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun startTimer() {
+        startTime = System.currentTimeMillis() // Guardar la hora de inicio
+
+        timerRunnable = Runnable {
+            val millis = System.currentTimeMillis() - startTime
+            val formattedTime = formatTime(millis)
+            timerChip.text = formattedTime // Actualizar el texto del Chip
+
+            // Volver a ejecutar este código después de 1 segundo
+            timerHandler.postDelayed(timerRunnable, 1000)
+        }
+
+        // Iniciar el temporizador por primera vez
+        timerHandler.post(timerRunnable)
+    }
+
+    private fun stopTimer() {
+        // Detener futuras ejecuciones del runnable
+        timerHandler.removeCallbacks(timerRunnable)
+    }
+
+    private fun formatTime(millis: Long): String {
+        // Función para convertir milisegundos a formato 00:00:00
+        val hours = TimeUnit.MILLISECONDS.toHours(millis)
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % 60
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
+
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
 
     // --- Callbacks de LocationHandlerListener ---
