@@ -19,7 +19,8 @@
             android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="@android:color/black"
-            android:layout_gravity="center_horizontal"/>
+            android:layout_gravity="center_horizontal"
+            android:paddingTop="36dp"/>
 
         <TextView
             android:layout_width="wrap_content"
