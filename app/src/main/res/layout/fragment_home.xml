@@ -18,14 +18,17 @@
             android:layout_height="wrap_content"
             android:text="SilentHelp"
             android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:paddingTop="36dp"
+            android:textColor="@android:color/black"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Protección discreta de emergencia"
             android:textSize="14sp"
-            android:layout_marginBottom="24dp"/>
+            android:layout_marginBottom="24dp"
+            android:textColor="@android:color/darker_gray"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -116,6 +119,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             tools:listitem="@layout/item_contact"/>
+
+        <Button
+            android:id="@+id/btn_register_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Registro (temporal)" />
 
     </LinearLayout>
 </ScrollView>

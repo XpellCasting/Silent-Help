@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Define la apariencia de la etiqueta de estado "Resuelto" -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Color de fondo: un verde claro y suave -->
+    <solid android:color="#E8F5E9" />
+
+    <!-- Bordes redondeados -->
+    <corners android:radius="16dp" />
+
+    <!-- Borde (opcional, pero le da un buen acabado) -->
+    <stroke
+        android:width="1dp"
+        android:color="#A5D6A7" />
+
+</shape>
