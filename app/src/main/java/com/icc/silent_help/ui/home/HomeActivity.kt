@@ -16,11 +16,11 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_home)
 
         bottomNavigation = findViewById(R.id.bottom_navigation)
 
-        bottomNavigation.setOnNavigationItemSelectedListener { item ->
+        bottomNavigation.setOnItemSelectedListener { item ->
             var selectedFragment: Fragment? = null
             when (item.itemId) {
                 R.id.navigation_home -> selectedFragment = HomeFragment()
