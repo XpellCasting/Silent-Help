@@ -32,3 +32,41 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env files
+.env
+.env.*.local
+
+# Build / Output
+dist/
+build/
+out/
+coverage/
+.nyc_output/
+
+# Caches
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+
+# Logs & runtime files
+logs/
+*.log
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# IDE / OS
+.vscode/
+.DS_Store
+Thumbs.db

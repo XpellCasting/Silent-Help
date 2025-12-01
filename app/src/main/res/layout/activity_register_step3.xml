@@ -84,7 +84,9 @@
                 android:layout_marginTop="16dp"
                 android:text="Nombre del Contacto *" />
 
+            <!-- ✅ ID agregado -->
             <EditText
+                android:id="@+id/emergencyContactName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Nombre del contacto de emergencia" />
@@ -95,10 +97,12 @@
                 android:layout_marginTop="8dp"
                 android:text="Teléfono de Emergencia *" />
 
+            <!-- ✅ ID agregado -->
             <EditText
+                android:id="@+id/emergencyContactPhone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="+1 234 567 8900"
+                android:hint="+56 9 1234 5678"
                 android:inputType="phone" />
 
             <LinearLayout
@@ -119,9 +123,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="Podrás agregar más contactos de emergencia después de completar la configuración inicial."/>
-
             </LinearLayout>
-
         </LinearLayout>
 
         <Button
@@ -130,6 +132,5 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="Completar Configuración" />
-
     </LinearLayout>
 </ScrollView>
