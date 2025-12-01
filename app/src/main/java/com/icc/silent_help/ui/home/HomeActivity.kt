@@ -92,22 +92,22 @@ class HomeActivity : AppCompatActivity() {
 
         promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle("Autenticación requerida")
-            .setSubtitle("Usa tu huella para acceder a la aplicación")
+            .setSubtitle("Usa tus datos biométricos para acceder a la aplicación")
             .setNegativeButtonText("Salir")
-            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK)
             .build()
     }
 
     private fun authenticateApp() {
         val biometricManager = BiometricManager.from(this)
-        if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS) {
+        if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS) {
             biometricPrompt.authenticate(promptInfo)
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        // If the app goes to the background, require re-authentication next time
+    override fun onStop() {
+        super.onStop()
+        // If the app is no longer visible, require re-authentication next time.
         isUnlocked = false
     }
 }

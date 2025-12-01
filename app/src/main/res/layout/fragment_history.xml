@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/backgroundColor"
     tools:context=".ui.history.HistoryFragment">
 
     <LinearLayout
@@ -20,7 +21,7 @@
             android:textStyle="bold"
             android:layout_gravity="center_horizontal"
             android:paddingTop="36dp"
-            android:textColor="@color/black"/>
+            android:textColor="@color/textColor"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -29,7 +30,7 @@
             android:textSize="14sp"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="24dp"
-            android:textColor="@android:color/darker_gray"/>
+            android:textColor="?android:attr/textColorSecondary"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -39,7 +40,7 @@
             android:text="Historial de Alertas"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@android:color/black"/>
+            android:textColor="@color/textColor"/>
 
         <Button
             android:id="@+id/btn_filter"
@@ -56,8 +57,7 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_alert_history"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
             tools:listitem="@layout/item_alert_history"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 

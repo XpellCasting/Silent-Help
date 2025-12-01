@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
+    android:background="@color/backgroundColor"
     tools:context=".ui.register.RegisterStep1Activity">
 
     <LinearLayout
@@ -18,7 +19,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:src="@drawable/ic_shield_off"
-            app:tint="@android:color/black"
+            app:tint="@color/textColor"
             android:layout_marginTop="37dp"/>
 
         <TextView
@@ -27,14 +28,14 @@
             android:text="Silent Help"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:color="@android:color/black"/>
+            android:textColor="@color/textColor"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Configuración inicial de tu cuenta"
             android:layout_marginBottom="24dp"
-            android:textColor="@android:color/darker_gray"/>
+            android:textColor="?android:attr/textColorSecondary"/>
 
         <!-- Indicador de pasos -->
         <LinearLayout
@@ -62,7 +63,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/card_background"
+            android:background="@color/cardBackgroundColor"
             android:padding="16dp">
 
             <TextView
@@ -70,12 +71,14 @@
                 android:layout_height="wrap_content"
                 android:text="Información Personal"
                 android:textStyle="bold"
+                android:textColor="@color/textColor"
                 android:textSize="18sp"
                 android:layout_marginBottom="16dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="@color/textColor"
                 android:text="Nombre Completo *" />
 
             <EditText
@@ -88,6 +91,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:textColor="@color/textColor"
                 android:text="Número de Teléfono *" />
 
             <EditText
@@ -101,12 +105,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
+                android:textColor="?android:attr/textColorSecondary"
                 android:text="Se enviará un código de verificación a este número"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:textColor="@color/textColor"
                 android:text="Email (Opcional)" />
 
             <EditText
@@ -118,27 +124,32 @@
 
             <CheckBox
                 android:id="@+id/termCheckBox"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:textColor="@color/textColor"
                 android:text="Acepto los términos y condiciones de uso *" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/info_background"
+                android:background="@color/backgroundColor"
                 android:padding="8dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    app:tint="@color/textColor"
                     android:src="@drawable/ic_shield_on" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:layout_marginStart="8dp"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:text="Tu información está protegida con cifrado de extremo a extremo y solo se usa para funciones de emergencia."/>
 
             </LinearLayout>
