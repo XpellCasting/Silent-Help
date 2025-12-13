@@ -24,6 +24,7 @@ class RegisterStep2Activity : AppCompatActivity() {
         // ✅ Recuperar datos desde la Activity anterior
         val nombre = intent.getStringExtra("nombre") ?: ""
         val telefono = intent.getStringExtra("telefono") ?: ""
+        val email = intent.getStringExtra("email") ?: ""
 
         // ✅ Mostrar número en la interfaz
         binding.phoneNumberText.text =
@@ -51,9 +52,11 @@ class RegisterStep2Activity : AppCompatActivity() {
                     val intent = Intent(this, RegisterStep3Activity::class.java).apply {
                         putExtra("nombre", nombre)
                         putExtra("telefono", telefono)
+                        putExtra("email", email)
                         putExtra("codigo", codigo)
                     }
                     startActivity(intent)
+                    finish()
                 } else {
                     Toast.makeText(
                         this,

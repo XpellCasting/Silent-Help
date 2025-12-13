@@ -207,6 +207,214 @@ const userService = {
             console.error('Error in createUserProfile:', error.message);
             throw new Error(`Error creating user profile: ${error.message}`);
         }
+    },
+
+    /**
+     * Get user profile by phone number
+     * @param {string} telefono - User's phone number
+     * @returns {Promise<Object>} - User profile data
+     */
+    async getUserByPhone(telefono) {
+        try {
+            const cleanPhone = telefono.replace(/\D/g, '');
+            
+            const user = await UserModel.findOne({ phoneNumber: cleanPhone });
+            
+            if (!user) {
+                return {
+                    success: false,
+                    message: 'Usuario no encontrado',
+                    data: null
+                };
+            }
+            
+            return {
+                success: true,
+                message: 'Usuario encontrado',
+                data: {
+                    userId: user._id,
+                    name: user.name,
+                    phoneNumber: user.phoneNumber,
+                    email: user.email,
+                    emergencyContacts: user.emergencyContacts,
+                    settings: user.settings,
+                    createdAt: user.createdAt
+                }
+            };
+        } catch (error) {
+            console.error('Error in getUserByPhone:', error.message);
+            throw new Error(`Error getting user profile: ${error.message}`);
+        }
+    },
+
+    /**
+     * Get user emergency contacts
+     * @param {string} telefono - User's phone number
+     * @returns {Promise<Object>} - Emergency contacts data
+     */
+    async getEmergencyContacts(telefono) {
+        try {
+            const cleanPhone = telefono.replace(/\D/g, '');
+            
+            const user = await UserModel.findOne({ phoneNumber: cleanPhone });
+            
+            if (!user) {
+                return {
+                    success: false,
+                    message: 'Usuario no encontrado',
+                    contacts: []
+                };
+            }
+            
+            return {
+                success: true,
+                message: 'Contactos de emergencia obtenidos',
+                contacts: user.emergencyContacts || []
+            };
+        } catch (error) {
+            console.error('Error in getEmergencyContacts:', error.message);
+            throw new Error(`Error getting emergency contacts: ${error.message}`);
+        }
+    },
+
+    /**
+     * Add emergency contact to user
+     * @param {string} telefono - User's phone number
+     * @param {Object} contact - Emergency contact data
+     * @returns {Promise<Object>} - Result of the operation
+     */
+    async addEmergencyContact(telefono, contact) {
+        try {
+            const cleanPhone = telefono.replace(/\D/g, '');
+            
+            // Validate contact data
+            if (!contact.name || !contact.phone) {
+                return {
+                    success: false,
+                    message: 'Nombre y teléfono del contacto son obligatorios'
+                };
+            }
+
+            const user = await UserModel.findOne({ phoneNumber: cleanPhone });
+            
+            if (!user) {
+                return {
+                    success: false,
+                    message: 'Usuario no encontrado'
+                };
+            }
+
+            // Add the new contact to the array
+            const newContact = {
+                name: contact.name,
+                phone: contact.phone,
+                relationship: contact.relationship || 'Contacto de Emergencia'
+            };
+
+            user.emergencyContacts.push(newContact);
+            await user.save();
+
+            console.log(`✅ Contacto de emergencia agregado a ${user.name}: ${newContact.name}`);
+
+            return {
+                success: true,
+                message: 'Contacto de emergencia agregado exitosamente',
+                contact: newContact,
+                totalContacts: user.emergencyContacts.length
+            };
+        } catch (error) {
+            console.error('Error in addEmergencyContact:', error.message);
+            throw new Error(`Error adding emergency contact: ${error.message}`);
+        }
+    },
+
+    /**
+     * Update emergency contact
+     * @param {string} telefono - User's phone number
+     * @param {string} contactId - Contact ID to update
+     * @param {Object} updatedData - Updated contact data
+     * @returns {Promise<Object>} - Result of the operation
+     */
+    async updateEmergencyContact(telefono, contactId, updatedData) {
+        try {
+            const cleanPhone = telefono.replace(/\D/g, '');
+            
+            const user = await UserModel.findOne({ phoneNumber: cleanPhone });
+            
+            if (!user) {
+                return {
+                    success: false,
+                    message: 'Usuario no encontrado'
+                };
+            }
+
+            const contact = user.emergencyContacts.id(contactId);
+            
+            if (!contact) {
+                return {
+                    success: false,
+                    message: 'Contacto no encontrado'
+                };
+            }
+
+            // Update contact fields
+            if (updatedData.name) contact.name = updatedData.name;
+            if (updatedData.phone) contact.phone = updatedData.phone;
+            if (updatedData.relationship) contact.relationship = updatedData.relationship;
+
+            await user.save();
+
+            return {
+                success: true,
+                message: 'Contacto actualizado exitosamente',
+                contact: contact
+            };
+        } catch (error) {
+            console.error('Error in updateEmergencyContact:', error.message);
+            throw new Error(`Error updating emergency contact: ${error.message}`);
+        }
+    },
+
+    /**
+     * Delete emergency contact
+     * @param {string} telefono - User's phone number
+     * @param {string} contactId - Contact ID to delete
+     * @returns {Promise<Object>} - Result of the operation
+     */
+    async deleteEmergencyContact(telefono, contactId) {
+        try {
+            const cleanPhone = telefono.replace(/\D/g, '');
+            
+            const user = await UserModel.findOne({ phoneNumber: cleanPhone });
+            
+            if (!user) {
+                return {
+                    success: false,
+                    message: 'Usuario no encontrado'
+                };
+            }
+
+            const contact = user.emergencyContacts.id(contactId);
+            
+            if (!contact) {
+                return {
+                    success: false,
+                    message: 'Contacto no encontrado'
+                };
+            }
+
+            contact.deleteOne();
+            await user.save();
+
+            return {
+                success: true,
+                message: 'Contacto eliminado exitosamente',
+                remainingContacts: user.emergencyContacts.length
+            };
+        } catch (error) {
+            console.error('Error in deleteEmergencyContact:', error.message);
+            throw new Error(`Error deleting emergency contact: ${error.message}`);
+        }
     }
     
 };

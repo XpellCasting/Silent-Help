@@ -2,11 +2,15 @@ package com.icc.silent_help
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class ContactsAdapter(private val contacts: List<EmergencyContact>) :
-    RecyclerView.Adapter<ContactsAdapter.ContactViewHolder>() {
+class ContactsAdapter(
+    private val contacts: List<EmergencyContact>,
+    private val onEditClick: (EmergencyContact) -> Unit,
+    private val onDeleteClick: (EmergencyContact) -> Unit
+) : RecyclerView.Adapter<ContactsAdapter.ContactViewHolder>() {
 
     // Este ViewHolder contiene las vistas para cada item de la lista.
     class ContactViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -14,6 +18,8 @@ class ContactsAdapter(private val contacts: List<EmergencyContact>) :
         val name: TextView = itemView.findViewById(R.id.tv_contact_name)
         val relationship: TextView = itemView.findViewById(R.id.tv_contact_relationship)
         val phone: TextView = itemView.findViewById(R.id.tv_contact_phone)
+        val btnEdit: ImageView = itemView.findViewById(R.id.iv_edit)
+        val btnDelete: ImageView = itemView.findViewById(R.id.iv_delete)
     }
 
     // Crea nuevos ViewHolders (invocado por el layout manager).
@@ -30,6 +36,14 @@ class ContactsAdapter(private val contacts: List<EmergencyContact>) :
         holder.name.text = contact.name
         holder.relationship.text = contact.relationship
         holder.phone.text = contact.phone
+        
+        holder.btnEdit.setOnClickListener {
+            onEditClick(contact)
+        }
+        
+        holder.btnDelete.setOnClickListener {
+            onDeleteClick(contact)
+        }
     }
 
     // Devuelve el tamaño de tu dataset (invocado por el layout manager).
