@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
+    android:background="@color/backgroundColor"
     tools:context=".ui.register.RegisterStep3Activity">
 
     <LinearLayout
@@ -18,21 +19,23 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:src="@drawable/ic_shield_off"
-            app:tint="@android:color/black"
-            android:layout_marginTop="32dp"/>
+            app:tint="@color/textColor"
+            android:layout_marginTop="37dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Silent Help"
             android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:textColor="@color/textColor"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Configuración inicial de tu cuenta"
-            android:layout_marginBottom="24dp"/>
+            android:layout_marginBottom="24dp"
+            android:textColor="?android:attr/textColorSecondary"/>
 
         <!-- Indicador de pasos -->
         <LinearLayout
@@ -60,13 +63,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/card_background"
+            android:background="@color/cardBackgroundColor"
             android:padding="16dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Contacto de Emergencia"
+                android:textColor="@color/textColor"
                 android:textStyle="bold"
                 android:textSize="18sp"
                 android:layout_marginBottom="16dp" />
@@ -74,12 +78,14 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="?android:attr/textColorSecondary"
                 android:text="Agrega un contacto de emergencia principal que será notificado automáticamente cuando actives una alerta." />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:textColor="@color/textColor"
                 android:text="Nombre del Contacto *" />
 
             <!-- ✅ ID agregado -->
@@ -93,6 +99,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:textColor="@color/textColor"
                 android:text="Teléfono de Emergencia *" />
 
             <!-- ✅ ID agregado -->
@@ -107,19 +114,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/info_background"
+                android:background="@color/backgroundColor"
                 android:padding="8dp"
                 android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    app:tint="@color/textColor"
                     android:src="@drawable/ic_shield_on" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:text="Podrás agregar más contactos de emergencia después de completar la configuración inicial."/>
             </LinearLayout>
         </LinearLayout>

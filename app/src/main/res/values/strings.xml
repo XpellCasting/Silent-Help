@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Silent-Help</string>
+    <string name="title_home">Inicio</string>
+    <string name="title_history">Historial</string>
+    <string name="title_biometrics">Biometría</string>
+    <string name="title_sensors">Sensores</string>
 </resources>
