@@ -50,4 +50,99 @@ object HttpHelper {
             }
         }
     }
+
+    /**
+     * Realiza una solicitud GET al backend
+     * @param url La URL del endpoint
+     * @param onResult Callback con la respuesta del servidor o error
+     */
+    fun get(
+        url: String,
+        onResult: (success: Boolean, response: String?) -> Unit
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val request = Request.Builder()
+                    .url(url)
+                    .get()
+                    .build()
+
+                val response = client.newCall(request).execute()
+
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    onResult(true, responseBody)
+                } else {
+                    onResult(false, "Error HTTP ${response.code}")
+                }
+            } catch (e: Exception) {
+                onResult(false, e.message)
+            }
+        }
+    }
+
+    /**
+     * Envía un objeto JSON al backend mediante PUT
+     * @param url La URL del endpoint
+     * @param data Los datos JSON a enviar
+     * @param onResult Callback con la respuesta del servidor o error
+     */
+    fun put(
+        url: String,
+        data: JSONObject,
+        onResult: (success: Boolean, response: String?) -> Unit
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                val body = RequestBody.create(mediaType, data.toString())
+
+                val request = Request.Builder()
+                    .url(url)
+                    .put(body)
+                    .build()
+
+                val response = client.newCall(request).execute()
+
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    onResult(true, responseBody)
+                } else {
+                    onResult(false, "Error HTTP ${response.code}")
+                }
+            } catch (e: Exception) {
+                onResult(false, e.message)
+            }
+        }
+    }
+
+    /**
+     * Realiza una solicitud DELETE al backend
+     * @param url La URL del endpoint
+     * @param onResult Callback con la respuesta del servidor o error
+     */
+    fun delete(
+        url: String,
+        onResult: (success: Boolean, response: String?) -> Unit
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val request = Request.Builder()
+                    .url(url)
+                    .delete()
+                    .build()
+
+                val response = client.newCall(request).execute()
+
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    onResult(true, responseBody)
+                } else {
+                    onResult(false, "Error HTTP ${response.code}")
+                }
+            } catch (e: Exception) {
+                onResult(false, e.message)
+            }
+        }
+    }
 }

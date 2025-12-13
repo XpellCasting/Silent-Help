@@ -119,13 +119,169 @@ const completeRegistration = async (req, res) => {
     }
 };
 
+const getUserProfile = async (req, res) => {
+    try {
+        const { telefono } = req.params;
+        
+        if (!telefono) {
+            return res.status(400).json({
+                success: false,
+                message: "El teléfono es obligatorio"
+            });
+        }
+
+        const response = await userService.getUserByPhone(telefono);
+
+        if (response.success) {
+            return res.status(200).json(response);
+        }
+
+        return res.status(404).json(response);
+
+    } catch (error) {
+        console.error("Error in getUserProfile:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+};
+
+const getEmergencyContacts = async (req, res) => {
+    try {
+        const { telefono } = req.params;
+        
+        if (!telefono) {
+            return res.status(400).json({
+                success: false,
+                message: "El teléfono es obligatorio"
+            });
+        }
+
+        const response = await userService.getEmergencyContacts(telefono);
+
+        return res.status(200).json(response);
+
+    } catch (error) {
+        console.error("Error in getEmergencyContacts:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+};
+
+const addEmergencyContact = async (req, res) => {
+    try {
+        const { telefono } = req.params;
+        const { name, phone, relationship } = req.body;
+        
+        if (!telefono) {
+            return res.status(400).json({
+                success: false,
+                message: "El teléfono del usuario es obligatorio"
+            });
+        }
+
+        if (!name || !phone) {
+            return res.status(400).json({
+                success: false,
+                message: "Nombre y teléfono del contacto son obligatorios"
+            });
+        }
+
+        const contact = { name, phone, relationship };
+        const response = await userService.addEmergencyContact(telefono, contact);
+
+        if (response.success) {
+            return res.status(201).json(response);
+        }
+
+        return res.status(404).json(response);
+
+    } catch (error) {
+        console.error("Error in addEmergencyContact:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+};
+
+const updateEmergencyContact = async (req, res) => {
+    try {
+        const { telefono, contactId } = req.params;
+        const updatedData = req.body;
+        
+        if (!telefono || !contactId) {
+            return res.status(400).json({
+                success: false,
+                message: "Teléfono y contactId son obligatorios"
+            });
+        }
+
+        const response = await userService.updateEmergencyContact(telefono, contactId, updatedData);
+
+        if (response.success) {
+            return res.status(200).json(response);
+        }
+
+        return res.status(404).json(response);
+
+    } catch (error) {
+        console.error("Error in updateEmergencyContact:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+};
+
+const deleteEmergencyContact = async (req, res) => {
+    try {
+        const { telefono, contactId } = req.params;
+        
+        if (!telefono || !contactId) {
+            return res.status(400).json({
+                success: false,
+                message: "Teléfono y contactId son obligatorios"
+            });
+        }
+
+        const response = await userService.deleteEmergencyContact(telefono, contactId);
+
+        if (response.success) {
+            return res.status(200).json(response);
+        }
+
+        return res.status(404).json(response);
+
+    } catch (error) {
+        console.error("Error in deleteEmergencyContact:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error interno del servidor",
+            error: error.message
+        });
+    }
+};
+
 
 
 const UserController = {
     sendCode,
     verifyCode,
     getVerificationStatus,
-    completeRegistration
+    completeRegistration,
+    getUserProfile,
+    getEmergencyContacts,
+    addEmergencyContact,
+    updateEmergencyContact,
+    deleteEmergencyContact
 };
 
 

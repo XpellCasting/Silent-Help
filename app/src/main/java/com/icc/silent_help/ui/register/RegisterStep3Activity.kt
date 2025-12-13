@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.icc.silent_help.databinding.ActivityRegisterStep3Binding
 import com.icc.silent_help.ui.home.HomeActivity
 import com.icc.silent_help.utils.HttpHelper
+import com.icc.silent_help.utils.UserPreferences
 import org.json.JSONObject
 import android.util.Log
 
@@ -54,10 +55,38 @@ class RegisterStep3Activity : AppCompatActivity() {
             ) { success, response ->
                 runOnUiThread {
                     if (success) {
+                        // ✅ Extraer el userId del response si existe
+                        val userId = try {
+                            val jsonResponse = JSONObject(response)
+                            if (jsonResponse.has("data")) {
+                                val dataObj = jsonResponse.getJSONObject("data")
+                                dataObj.optString("userId", null)
+                            } else {
+                                null
+                            }
+                        } catch (e: Exception) {
+                            Log.e("RegisterStep3", "Error extrayendo userId: ${e.message}")
+                            null
+                        }
+
+                        // ✅ Guardar todos los datos del usuario usando UserPreferences
+                        UserPreferences.saveUserData(
+                            context = this,
+                            userId = userId,
+                            name = nombre,
+                            phone = telefono,
+                            email = email,
+                            emergencyContactName = nombreEmergencia,
+                            emergencyContactPhone = telefonoEmergencia
+                        )
+
+                        Log.d("RegisterStep3", "✅ Datos guardados persistentemente")
                         Toast.makeText(this, "✅ Registro completado con éxito", Toast.LENGTH_LONG).show()
+                        
                         val intent = Intent(this, HomeActivity::class.java)
                         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         startActivity(intent)
+                        finish()
                     } else {
                         Log.e("RegisterStep3", "❌ Error: $response")
                         Toast.makeText(this, "Error al completar el registro", Toast.LENGTH_LONG).show()
