@@ -21,7 +21,7 @@ class BiometricsFragment : Fragment() {
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
-    private lateinit var switchFingerprint: SwitchMaterial
+    private lateinit var switchBiometrics: SwitchMaterial
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,83 +35,76 @@ class BiometricsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Get SharedPreferences
         val prefs = requireActivity().getSharedPreferences("BiometricPrefs", Context.MODE_PRIVATE)
 
-        switchFingerprint = view.findViewById(R.id.switch_fingerprint)
+        switchBiometrics = view.findViewById(R.id.switch_biometrics)
         executor = ContextCompat.getMainExecutor(requireContext())
 
-        // Load the saved preference and set the switch state
-        switchFingerprint.isChecked = prefs.getBoolean("use_biometrics", false)
+        switchBiometrics.isChecked = prefs.getBoolean("use_biometrics", false)
 
         biometricPrompt = BiometricPrompt(this, executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
                     Toast.makeText(requireContext(), "Error de autenticación: $errString", Toast.LENGTH_SHORT).show()
-                    // Revert the switch if authentication fails
-                    switchFingerprint.isChecked = false
+                    switchBiometrics.isChecked = false
                 }
 
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    Toast.makeText(requireContext(), "Autenticación exitosa! La protección está activada.", Toast.LENGTH_SHORT).show()
-                    // Save the preference
+                    Toast.makeText(requireContext(), "¡Autenticación exitosa! La protección biométrica está activada.", Toast.LENGTH_SHORT).show()
                     prefs.edit().putBoolean("use_biometrics", true).apply()
                 }
 
                 override fun onAuthenticationFailed() {
                     super.onAuthenticationFailed()
                     Toast.makeText(requireContext(), "Autenticación fallida", Toast.LENGTH_SHORT).show()
-                    // Revert the switch
-                    switchFingerprint.isChecked = false
+                    switchBiometrics.isChecked = false
                 }
             })
 
         promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Autenticación por huella dactilar")
-            .setSubtitle("Usa tu huella para activar la protección")
+            .setTitle("Autenticación biométrica")
+            .setSubtitle("Usa tus datos biométricos para activar la protección")
             .setNegativeButtonText("Cancelar")
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK)
             .build()
 
-        switchFingerprint.setOnCheckedChangeListener { _, isChecked ->
+        switchBiometrics.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                // If the user wants to enable, start the auth process
                 checkBiometricSupportAndAuthenticate()
             } else {
-                // If the user wants to disable, just save the preference
                 prefs.edit().putBoolean("use_biometrics", false).apply()
-                Toast.makeText(requireContext(), "Protección por huella desactivada.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Protección biométrica desactivada.", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun checkBiometricSupportAndAuthenticate() {
         val biometricManager = BiometricManager.from(requireContext())
-        when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)) {
+        when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK)) {
             BiometricManager.BIOMETRIC_SUCCESS -> {
                 biometricPrompt.authenticate(promptInfo)
             }
             BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> {
-                Toast.makeText(requireContext(), "El dispositivo no tiene sensor de huella", Toast.LENGTH_SHORT).show()
-                switchFingerprint.isChecked = false
+                Toast.makeText(requireContext(), "Tu dispositivo no es compatible con la autenticación biométrica", Toast.LENGTH_SHORT).show()
+                switchBiometrics.isChecked = false
             }
             BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
-                Toast.makeText(requireContext(), "El sensor de huella no está disponible actualmente", Toast.LENGTH_SHORT).show()
-                switchFingerprint.isChecked = false
+                Toast.makeText(requireContext(), "Los sensores biométricos no están disponibles actualmente", Toast.LENGTH_SHORT).show()
+                switchBiometrics.isChecked = false
             }
             BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
-                Toast.makeText(requireContext(), "No tienes huellas registradas. Por favor, configura una.", Toast.LENGTH_LONG).show()
-                // Redirect the user to security settings to enroll a fingerprint
+                Toast.makeText(requireContext(), "No tienes datos biométricos registrados. Por favor, configúralos en los ajustes de tu dispositivo.", Toast.LENGTH_LONG).show()
                 val enrollIntent = Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
-                    putExtra(Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED, BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                    putExtra(Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED, BiometricManager.Authenticators.BIOMETRIC_WEAK)
                 }
                 startActivity(enrollIntent)
-                switchFingerprint.isChecked = false
+                switchBiometrics.isChecked = false
             }
             else -> {
                 Toast.makeText(requireContext(), "Error desconocido", Toast.LENGTH_SHORT).show()
-                switchFingerprint.isChecked = false
+                switchBiometrics.isChecked = false
             }
         }
     }
