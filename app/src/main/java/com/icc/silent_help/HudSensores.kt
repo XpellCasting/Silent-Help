@@ -1,6 +1,7 @@
 package com.icc.silent_help
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
@@ -8,13 +9,15 @@ import android.os.Looper
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import com.google.android.material.chip.Chip
+import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 
-
-class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerListener {
+class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerListener {
 
     // --- Handlers de Lógica ---
     private lateinit var audioHandler: AudioHandler
@@ -25,6 +28,11 @@ class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerLi
     private lateinit var locationPrecisionTextView: TextView
     private lateinit var stopAlertButton: Button
     private lateinit var timerChip: Chip
+
+    // --- Biometría ---
+    private lateinit var executor: Executor
+    private lateinit var biometricPrompt: BiometricPrompt
+    private lateinit var promptInfo: BiometricPrompt.PromptInfo
 
     // --- Variables para el temporizador ---
     private val timerHandler = Handler(Looper.getMainLooper())
@@ -49,63 +57,93 @@ class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerLi
         stopAlertButton = findViewById(R.id.stopAlertButton)
         timerChip = findViewById(R.id.timerChip)
 
+        // Configurar Biometría
+        setupBiometrics()
+
         // Configurar Listeners de botones
         stopAlertButton.setOnClickListener {
-            stopTimer()
-            audioHandler.stopRecording()
-            // Lógica para detener la alerta
-            Toast.makeText(this, "Alerta Detenida", Toast.LENGTH_SHORT).show()
-            finish()
+            val prefs = getSharedPreferences("BiometricPrefs", Context.MODE_PRIVATE)
+            val useBiometrics = prefs.getBoolean("use_biometrics", false)
+
+            if (useBiometrics) {
+                biometricPrompt.authenticate(promptInfo)
+            } else {
+                deactivateAlert()
+            }
         }
 
         // Iniciar el proceso de alerta
         startAlertProcess()
     }
 
+    private fun setupBiometrics() {
+        executor = ContextCompat.getMainExecutor(this)
+        biometricPrompt = BiometricPrompt(this, executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    deactivateAlert()
+                }
+
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    Toast.makeText(this@HudSensores, "Autenticación cancelada", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onAuthenticationFailed() {
+                    super.onAuthenticationFailed()
+                    Toast.makeText(this@HudSensores, "Huella no reconocida", Toast.LENGTH_SHORT).show()
+                }
+            })
+
+        promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Verificación de huella")
+            .setSubtitle("Usa tu huella para desactivar la alerta")
+            .setNegativeButtonText("Cancelar")
+            .build()
+    }
+
+    private fun deactivateAlert() {
+        stopTimer()
+        audioHandler.stopRecording()
+        Toast.makeText(this, "Alerta Detenida", Toast.LENGTH_SHORT).show()
+        finish()
+    }
+
     private fun startAlertProcess() {
         val permissions = arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.ACCESS_FINE_LOCATION)
         if (locationHandler.hasLocationPermission() && hasAudioPermission()) {
-            // Si ya tenemos permisos, iniciar todo
             locationHandler.requestLocation()
             audioHandler.startRecording()
             startTimer()
         } else {
-            // Si no, pedirlos
             ActivityCompat.requestPermissions(this, permissions, REQUEST_PERMISSIONS_CODE)
         }
     }
 
     private fun hasAudioPermission(): Boolean {
-        return ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun startTimer() {
-        startTime = System.currentTimeMillis() // Guardar la hora de inicio
-
+        startTime = System.currentTimeMillis()
         timerRunnable = Runnable {
             val millis = System.currentTimeMillis() - startTime
             val formattedTime = formatTime(millis)
-            timerChip.text = formattedTime // Actualizar el texto del Chip
-
-            // Volver a ejecutar este código después de 1 segundo
+            timerChip.text = formattedTime
             timerHandler.postDelayed(timerRunnable, 1000)
         }
-
-        // Iniciar el temporizador por primera vez
         timerHandler.post(timerRunnable)
     }
 
     private fun stopTimer() {
-        // Detener futuras ejecuciones del runnable
         timerHandler.removeCallbacks(timerRunnable)
     }
 
     private fun formatTime(millis: Long): String {
-        // Función para convertir milisegundos a formato 00:00:00
         val hours = TimeUnit.MILLISECONDS.toHours(millis)
         val minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % 60
         val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
-
         return String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
 
@@ -124,14 +162,12 @@ class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerLi
     // --- Callbacks de AudioHandlerListener ---
     override fun onRecordingStarted() {
         Toast.makeText(this, "Grabación de evidencia iniciada", Toast.LENGTH_SHORT).show()
-
     }
 
     override fun onRecordingStopped(filePath: String) {
         Toast.makeText(this, "Evidencia de audio guardada", Toast.LENGTH_SHORT).show()
-
     }
-
+	
     override fun onPlayingStarted() { /* No se usa en esta pantalla */ }
     override fun onPlayingStopped() { /* No se usa en esta pantalla */ }
 
@@ -139,33 +175,23 @@ class HudSensores : ComponentActivity(), AudioHandlerListener, LocationHandlerLi
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_PERMISSIONS_CODE) {
-            // Verificar si ambos permisos fueron concedidos
-            val audioGranted = grantResults.getOrNull(0) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            val locationGranted = grantResults.getOrNull(1) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            val audioGranted = grantResults.getOrNull(0) == PackageManager.PERMISSION_GRANTED
+            val locationGranted = grantResults.getOrNull(1) == PackageManager.PERMISSION_GRANTED
 
             if (audioGranted && locationGranted) {
                 startAlertProcess()
             } else {
                 Toast.makeText(this, "Se requieren ambos permisos para activar la alerta.", Toast.LENGTH_LONG).show()
-                finish() // Cierra la app si no se dan los permisos necesarios
+                finish()
             }
         }
     }
 
     override fun onStop() {
         super.onStop()
-        // Liberar recursos para evitar fugas de memoria
         audioHandler.releaseResources()
     }
-}
-
-private fun ComponentActivity.onRequestPermissionsResult(
-    requestCode: Int,
-    permissions: Array<String>,
-    grantResults: IntArray
-) {
 }
