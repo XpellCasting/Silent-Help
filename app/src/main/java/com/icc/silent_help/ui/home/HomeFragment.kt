@@ -128,7 +128,7 @@ class HomeFragment : Fragment() {
 
         // Llamada HTTP al backend para obtener los contactos de emergencia
         HttpHelper.get(
-            url = "http://10.0.2.2:3000/api/user/emergency-contacts/$userPhone"
+            url = "http://192.168.1.12:3000/api/user/emergency-contacts/$userPhone"
         ) { success, response ->
             requireActivity().runOnUiThread {
                 if (success) {
@@ -242,7 +242,7 @@ class HomeFragment : Fragment() {
         }
 
         HttpHelper.delete(
-            url = "http://10.0.2.2:3000/api/user/emergency-contacts/$userPhone/${contact.id}"
+            url = "http://192.168.1.12:3000/api/user/emergency-contacts/$userPhone/${contact.id}"
         ) { success, response ->
             requireActivity().runOnUiThread {
                 if (success) {

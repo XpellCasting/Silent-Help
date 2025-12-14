@@ -75,7 +75,7 @@ class HistoryFragment : Fragment() {
             status = "Resuelto", // O mapear status real si viene del backend
             duration = request.duration,
             address = request.direccion,
-            audioBase64 = request.audio_base64
+            audios = request.audios ?: emptyList()
         )
     }
 }

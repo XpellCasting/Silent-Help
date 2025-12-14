@@ -54,7 +54,7 @@ class RegisterStep1Activity : AppCompatActivity() {
 
             // 🔹 Enviar la solicitud HTTP para generar el código SMS
             HttpHelper.post(
-                url = "http://10.0.2.2:3000/api/user/send-code", // ⚠️ Cambia por tu endpoint real
+                url = "http://192.168.1.12:3000/api/user/send-code", // ⚠️ Cambia por tu endpoint real
                 data = data
             ) { success, response ->
                 runOnUiThread {

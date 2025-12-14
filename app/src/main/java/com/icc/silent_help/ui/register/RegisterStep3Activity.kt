@@ -50,7 +50,7 @@ class RegisterStep3Activity : AppCompatActivity() {
 
             // 🔹 Llamada HTTP al backend
             HttpHelper.post(
-                url = "http://10.0.2.2:3000/api/user/complete-register",
+                url = "http://192.168.1.12:3000/api/user/complete-register",
                 data = data
             ) { success, response ->
                 runOnUiThread {

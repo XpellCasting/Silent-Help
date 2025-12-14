@@ -98,7 +98,7 @@ class AddEmergencyContactActivity : AppCompatActivity() {
 
         // Enviar al backend
         HttpHelper.put(
-            url = "http://10.0.2.2:3000/api/user/emergency-contacts/$userPhone/$contactId",
+            url = "http://192.168.1.12:3000/api/user/emergency-contacts/$userPhone/$contactId",
             data = contactData
         ) { success, response ->
             runOnUiThread {
@@ -181,7 +181,7 @@ class AddEmergencyContactActivity : AppCompatActivity() {
 
         // Enviar al backend
         HttpHelper.post(
-            url = "http://10.0.2.2:3000/api/user/emergency-contacts/$userPhone",
+            url = "http://192.168.1.12:3000/api/user/emergency-contacts/$userPhone",
             data = contactData
         ) { success, response ->
             runOnUiThread {
