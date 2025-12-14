@@ -6,6 +6,7 @@ const router = express.Router();
 router.post('/create', AlertController.createAlert);
 router.get('/:userId', AlertController.getAlertsByUser);
 router.put('/:alertId/audio', AlertController.addAudioToAlert);
+router.put('/:alertId/location', AlertController.updateLocation);
 router.put('/:alertId/end', AlertController.endAlert);
 
 export default router;

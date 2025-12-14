@@ -1,8 +1,11 @@
 package com.icc.silent_help.ui.home
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -28,9 +31,25 @@ class HomeActivity : AppCompatActivity() {
     // Flag to avoid re-authentication in the same session
     private var isUnlocked = false
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val audioGranted = permissions[Manifest.permission.RECORD_AUDIO] ?: false
+        val locationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+
+        if (audioGranted && locationGranted) {
+            Log.d("HomeActivity", "Permisos concedidos")
+        } else {
+            Toast.makeText(this, "Se requieren permisos para el funcionamiento completo", Toast.LENGTH_LONG).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Solicitar permisos al iniciar la app
+        checkAndRequestPermissions()
+
         // ✅ Verificar que el usuario esté registrado antes de continuar
         if (!UserPreferences.isUserRegistered(this)) {
             // Si no está registrado, redirigir al registro
@@ -122,6 +141,22 @@ class HomeActivity : AppCompatActivity() {
         val biometricManager = BiometricManager.from(this)
         if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS) {
             biometricPrompt.authenticate(promptInfo)
+        }
+    }
+    
+    private fun checkAndRequestPermissions() {
+        val permissions = arrayOf(
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+
+        val permissionsToRequest = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        }.toTypedArray()
+
+        if (permissionsToRequest.isNotEmpty()) {
+            requestPermissionLauncher.launch(permissionsToRequest)
         }
     }
 

@@ -85,6 +85,8 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       lowercase: true,
+      unique: true,
+      sparse: true,
     },
     phoneNumber: {
       type: String,
@@ -104,8 +106,7 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Opcional: índice por correo
-userSchema.index({ email: 1 });
+
 
 // 🔹 Exportar modelo
 export default mongoose.model('User', userSchema);

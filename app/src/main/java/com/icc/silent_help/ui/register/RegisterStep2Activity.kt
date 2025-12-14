@@ -10,6 +10,8 @@ import org.json.JSONObject
 import android.util.Log
 import kotlin.math.log
 
+import com.icc.silent_help.api.RetrofitClient
+
 class RegisterStep2Activity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRegisterStep2Binding
@@ -85,8 +87,9 @@ class RegisterStep2Activity : AppCompatActivity() {
 
         Log.d("DEBUG", data.toString())
 
+        // 🔹 Llamada HTTP al backend para verificar código
         HttpHelper.post(
-            url = "http://192.168.1.12:3000/api/user/verify-code", // ✅ Endpoint de verificación
+            url = "${RetrofitClient.BASE_URL}api/user/verify-code",
             data = data
         ) { success, response ->
             runOnUiThread {

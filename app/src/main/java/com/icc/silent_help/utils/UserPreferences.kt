@@ -24,6 +24,7 @@ object UserPreferences {
     private const val KEY_IS_MIC_ENABLED = "isMicEnabled"
     private const val KEY_IS_PROXIMITY_ENABLED = "isProximityEnabled"
     private const val KEY_AUDIO_DURATION = "audioDuration"
+    private const val KEY_GPS_FREQUENCY = "gpsFrequency"
 
     private fun getPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -174,5 +175,13 @@ object UserPreferences {
 
     fun getAudioDuration(context: Context): Int {
         return getPreferences(context).getInt(KEY_AUDIO_DURATION, 120)
+    }
+
+    fun setGpsFrequency(context: Context, frequencySeconds: Int) {
+        getPreferences(context).edit().putInt(KEY_GPS_FREQUENCY, frequencySeconds).apply()
+    }
+
+    fun getGpsFrequency(context: Context): Int {
+        return getPreferences(context).getInt(KEY_GPS_FREQUENCY, 10) // Por defecto 10 segundos
     }
 }
