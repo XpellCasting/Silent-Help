@@ -8,12 +8,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.icc.silent_help.R
+import com.icc.silent_help.ui.register.RegisterStep1Activity
+import com.icc.silent_help.utils.UserPreferences
 import java.util.concurrent.Executor
 
 class BiometricsFragment : Fragment() {
@@ -22,6 +26,7 @@ class BiometricsFragment : Fragment() {
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     private lateinit var switchBiometrics: SwitchMaterial
+    private lateinit var btnLogout: MaterialButton
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,6 +43,7 @@ class BiometricsFragment : Fragment() {
         val prefs = requireActivity().getSharedPreferences("BiometricPrefs", Context.MODE_PRIVATE)
 
         switchBiometrics = view.findViewById(R.id.switch_biometrics)
+        btnLogout = view.findViewById(R.id.btn_logout)
         executor = ContextCompat.getMainExecutor(requireContext())
 
         switchBiometrics.isChecked = prefs.getBoolean("use_biometrics", false)
@@ -78,6 +84,45 @@ class BiometricsFragment : Fragment() {
                 Toast.makeText(requireContext(), "Protección biométrica desactivada.", Toast.LENGTH_SHORT).show()
             }
         }
+
+        // ✅ Configurar botón de cerrar sesión
+        btnLogout.setOnClickListener {
+            showLogoutConfirmationDialog()
+        }
+    }
+
+    /**
+     * Muestra un diálogo de confirmación antes de cerrar sesión
+     */
+    private fun showLogoutConfirmationDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Cerrar sesión")
+            .setMessage("¿Estás seguro de que deseas cerrar sesión? Se borrarán todos los datos guardados en este dispositivo.")
+            .setPositiveButton("Sí, cerrar sesión") { _, _ ->
+                logoutUser()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    /**
+     * Cierra la sesión del usuario y lo redirige al registro
+     */
+    private fun logoutUser() {
+        // Limpiar todos los datos del usuario
+        UserPreferences.clearUserData(requireContext())
+        
+        // También limpiar las preferencias biométricas
+        val prefs = requireActivity().getSharedPreferences("BiometricPrefs", Context.MODE_PRIVATE)
+        prefs.edit().clear().apply()
+        
+        Toast.makeText(requireContext(), "Sesión cerrada exitosamente", Toast.LENGTH_SHORT).show()
+        
+        // Redirigir a la pantalla de registro
+        val intent = Intent(requireContext(), RegisterStep1Activity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        requireActivity().finish()
     }
 
     private fun checkBiometricSupportAndAuthenticate() {

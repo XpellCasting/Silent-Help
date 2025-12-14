@@ -1,6 +1,7 @@
 package com.icc.silent_help.ui.home
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
@@ -12,6 +13,9 @@ import com.icc.silent_help.R
 import com.icc.silent_help.ui.biometrics.BiometricsFragment
 import com.icc.silent_help.ui.history.HistoryFragment
 import com.icc.silent_help.ui.sensors.SensorsFragment
+import com.icc.silent_help.ui.register.RegisterStep1Activity
+import com.icc.silent_help.utils.UserPreferences
+import android.util.Log
 import java.util.concurrent.Executor
 
 class HomeActivity : AppCompatActivity() {
@@ -26,6 +30,22 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // ✅ Verificar que el usuario esté registrado antes de continuar
+        if (!UserPreferences.isUserRegistered(this)) {
+            // Si no está registrado, redirigir al registro
+            val intent = Intent(this, RegisterStep1Activity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+            return
+        }
+
+        // ✅ Log de datos del usuario (para debug)
+        Log.d("HomeActivity", "Usuario: ${UserPreferences.getUserName(this)}")
+        Log.d("HomeActivity", "Teléfono: ${UserPreferences.getUserPhone(this)}")
+        Log.d("HomeActivity", "Email: ${UserPreferences.getUserEmail(this)}")
+        
         setContentView(R.layout.activity_home)
 
         bottomNavigation = findViewById(R.id.bottom_navigation)
