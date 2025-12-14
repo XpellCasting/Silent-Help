@@ -11,6 +11,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.icc.silent_help.R
 import com.icc.silent_help.models.AlertHistoryItem
+import android.media.MediaPlayer
+import android.util.Base64
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class HistoryAdapter(
     private val context: Context,
@@ -56,13 +61,44 @@ class HistoryAdapter(
 
 
         holder.audioButton.setOnClickListener {
-            Toast.makeText(context, "Reproduciendo audio de la alerta #${currentAlert.id}", Toast.LENGTH_SHORT).show()
+            val audioBase64 = currentAlert.audioBase64
+            if (!audioBase64.isNullOrEmpty()) {
+                playBase64Audio(audioBase64)
+            } else {
+                Toast.makeText(context, "Audio no disponible", Toast.LENGTH_SHORT).show()
+            }
         }
         holder.locationButton.setOnClickListener {
             Toast.makeText(context, "Mostrando ubicación de la alerta #${currentAlert.id}", Toast.LENGTH_SHORT).show()
         }
         holder.evidenceButton.setOnClickListener {
             Toast.makeText(context, "Descargando evidencia de la alerta #${currentAlert.id}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun playBase64Audio(base64String: String) {
+        try {
+            val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+            val tempFile = File.createTempFile("temp_audio", ".3gp", context.cacheDir)
+            val fos = FileOutputStream(tempFile)
+            fos.write(decodedBytes)
+            fos.close()
+
+            val mediaPlayer = MediaPlayer()
+            mediaPlayer.setDataSource(tempFile.absolutePath)
+            mediaPlayer.prepare()
+            mediaPlayer.start()
+            
+            Toast.makeText(context, "Reproduciendo audio...", Toast.LENGTH_SHORT).show()
+
+            mediaPlayer.setOnCompletionListener {
+                it.release()
+                tempFile.delete()
+            }
+
+        } catch (e: IOException) {
+            e.printStackTrace()
+            Toast.makeText(context, "Error al reproducir audio", Toast.LENGTH_SHORT).show()
         }
     }
 }
