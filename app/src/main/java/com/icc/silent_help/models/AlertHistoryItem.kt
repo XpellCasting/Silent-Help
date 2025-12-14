@@ -1,11 +1,13 @@
 package com.icc.silent_help.models
 
+import com.google.gson.annotations.SerializedName
+
 data class AlertHistoryItem(
-    val id: String,
+    @SerializedName("_id") val id: String,
     val date: String,
-    val time: String,
+    @SerializedName("startTime") val time: String,
     val status: String,
     val duration: String,
-    val address: String,
-    val audioBase64: String? = null
+    @SerializedName("direccion") val address: String,
+    val audios: List<String>? = null
 )
