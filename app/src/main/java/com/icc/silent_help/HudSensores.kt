@@ -19,7 +19,18 @@ import java.util.concurrent.TimeUnit
 import com.google.firebase.storage.FirebaseStorage
 import android.net.Uri
 import android.util.Log
+import android.util.Base64
+import com.icc.silent_help.api.AlertRequest
+import com.icc.silent_help.api.AlertResponse
+import com.icc.silent_help.api.RetrofitClient
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
+import java.io.FileInputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 
 class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerListener {
@@ -43,6 +54,7 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
     private val timerHandler = Handler(Looper.getMainLooper())
     private lateinit var timerRunnable: Runnable
     private var startTime: Long = 0
+    private var endTime: Long = 0
 
     companion object {
         private const val REQUEST_PERMISSIONS_CODE = 123
@@ -110,6 +122,7 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
 
     private fun deactivateAlert() {
         stopTimer()
+        endTime = System.currentTimeMillis()
         audioHandler.stopRecording()
         Toast.makeText(this, "Alerta Detenida", Toast.LENGTH_SHORT).show()
     }
@@ -173,7 +186,7 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
                 Log.d("Firebase", "Audio subido: $downloadUrl")
 
                 // AQUI es donde envías los datos a tu MongoDB
-                sendAlertToBackend(downloadUrl)
+                sendAlertToBackend(downloadUrl, filePath)
             }
         }.addOnFailureListener { e ->
             Toast.makeText(this, "Error al subir audio: ${e.message}", Toast.LENGTH_LONG).show()
@@ -182,29 +195,66 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
         }
     }
 
-    private fun sendAlertToBackend(audioUrl: String) {
-        // Recuperar el texto de la ubicación actual de tus TextViews o variables
+    private fun sendAlertToBackend(audioUrl: String, filePath: String) {
+        // Recuperar datos
         val currentAddress = locationAddressTextView.text.toString()
-        val timestamp = System.currentTimeMillis()
+        val durationMillis = endTime - startTime
+        val durationStr = formatTime(durationMillis)
+        
+        // Formatear fechas solo hora
+        val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        val startTimeStr = sdf.format(Date(startTime))
+        val endTimeStr = sdf.format(Date(endTime))
+        
+        // Formatear fecha dia/mes/año
+        val dateSdf = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale.getDefault())
+        val dateStr = dateSdf.format(Date(startTime))
 
-        // Crear el objeto (Pseudo-código, adáptalo a tu librería de HTTP como Retrofit o Ktor)
-        val alertaData = hashMapOf(
-            "audio_url" to audioUrl,
-            "direccion" to currentAddress,
-            "fecha" to timestamp,
-            "usuario_id" to "ID_DEL_USUARIO_ACTUAL" // Si tienes login
+        // Codificar audio a Base64
+        val audioBase64 = encodeAudioToBase64(filePath)
+
+        val request = AlertRequest(
+            userId = "ID_DEL_USUARIO_ACTUAL", // Idealmente obtener de preferencias/sesión
+            direccion = currentAddress,
+            audio_url = audioUrl,
+            audio_base64 = audioBase64,
+            startTime = startTimeStr,
+            endTime = endTimeStr,
+            date = dateStr,
+            duration = durationStr
         )
 
-        // AQUI haces la petición POST a tu servidor (Node/Express/Mongo)
-        // Ejemplo ficticio:
-        // ApiService.crearAlerta(alertaData) {
-        //      Toast.makeText(this, "Alerta registrada en historial", Toast.LENGTH_LONG).show()
-        //      finish() // AHORA SÍ cerramos la actividad
-        // }
+        Toast.makeText(this, "Enviando alerta al servidor...", Toast.LENGTH_SHORT).show()
 
-        // Si no tienes el backend listo aún, solo cierra la activity por ahora:
-        Toast.makeText(this, "URL lista para Mongo: $audioUrl", Toast.LENGTH_LONG).show()
-        finish()
+        RetrofitClient.instance.createAlert(request).enqueue(object : Callback<AlertResponse> {
+            override fun onResponse(call: Call<AlertResponse>, response: Response<AlertResponse>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(this@HudSensores, "Alerta registrada correctamente", Toast.LENGTH_LONG).show()
+                    Log.d("API", "Success: ${response.body()?.message}")
+                } else {
+                    Toast.makeText(this@HudSensores, "Error al registrar alerta: ${response.code()}", Toast.LENGTH_LONG).show()
+                    Log.e("API", "Error: ${response.errorBody()?.string()}")
+                }
+                finish()
+            }
+
+            override fun onFailure(call: Call<AlertResponse>, t: Throwable) {
+                Toast.makeText(this@HudSensores, "Fallo de conexión: ${t.message}", Toast.LENGTH_LONG).show()
+                Log.e("API", "Failure: ${t.message}")
+                finish()
+            }
+        })
+    }
+
+    private fun encodeAudioToBase64(path: String): String {
+        return try {
+            val file = File(path)
+            val bytes = FileInputStream(file).use { it.readBytes() }
+            Base64.encodeToString(bytes, Base64.NO_WRAP)
+        } catch (e: Exception) {
+            Log.e("Base64", "Error encoding audio: ${e.message}")
+            ""
+        }
     }
 
     // --- Callbacks de LocationHandlerListener ---
