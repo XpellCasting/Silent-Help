@@ -9,6 +9,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.icc.silent_help.R
 import com.icc.silent_help.models.AlertHistoryItem
+import com.icc.silent_help.api.AlertRequest
+import com.icc.silent_help.api.RetrofitClient
+import android.widget.Toast
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import com.icc.silent_help.utils.UserPreferences
 
 class HistoryFragment : Fragment() {
 
@@ -33,40 +40,42 @@ class HistoryFragment : Fragment() {
         // Configurar el RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        // Datos de ejemplo
-        val alertHistoryList = getDummyData()
-
-        // Crear y asignar el adapter
-        historyAdapter = HistoryAdapter(requireContext(), alertHistoryList)
-        recyclerView.adapter = historyAdapter
+        // Cargar historial desde la API
+        loadAlertHistory()
     }
 
-    private fun getDummyData(): List<AlertHistoryItem> {
-        return listOf(
-            AlertHistoryItem(
-                id = "001",
-                date = "15 Nov 2025",
-                time = "14:30",
-                status = "Resuelto",
-                duration = "5 min",
-                address = "Calle Principal 123, Ciudad"
-            ),
-            AlertHistoryItem(
-                id = "002",
-                date = "14 Nov 2025",
-                time = "09:15",
-                status = "Cancelado",
-                duration = "1 min",
-                address = "Avenida Secundaria 456, Pueblo"
-            ),
-            AlertHistoryItem(
-                id = "003",
-                date = "12 Nov 2025",
-                time = "21:45",
-                status = "Resuelto",
-                duration = "12 min",
-                address = "Bulevar del Centro 789, Metrópolis"
-            )
+    private fun loadAlertHistory() {
+        val userId = UserPreferences.getUserId(requireContext()) ?: "USUARIO_DESCONOCIDO"
+
+        RetrofitClient.instance.getAlerts(userId).enqueue(object : Callback<List<AlertRequest>> {
+            override fun onResponse(call: Call<List<AlertRequest>>, response: Response<List<AlertRequest>>) {
+                if (response.isSuccessful) {
+                    val alerts = response.body()
+                    if (alerts != null) {
+                        val historyItems = alerts.map { mapToHistoryItem(it) }
+                        historyAdapter = HistoryAdapter(requireContext(), historyItems)
+                        recyclerView.adapter = historyAdapter
+                    }
+                } else {
+                    Toast.makeText(context, "Error al cargar historial", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<List<AlertRequest>>, t: Throwable) {
+                Toast.makeText(context, "Fallo de conexión: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun mapToHistoryItem(request: AlertRequest): AlertHistoryItem {
+        return AlertHistoryItem(
+            id = request.userId, // O usar un ID único generado si viene del backend
+            date = request.date,
+            time = request.startTime, // Asumiendo que startTime es "HH:mm:ss"
+            status = "Resuelto", // O mapear status real si viene del backend
+            duration = request.duration,
+            address = request.direccion,
+            audioBase64 = request.audio_base64
         )
     }
 }

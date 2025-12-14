@@ -6,5 +6,6 @@ data class AlertHistoryItem(
     val time: String,
     val status: String,
     val duration: String,
-    val address: String
+    val address: String,
+    val audioBase64: String? = null
 )

@@ -23,6 +23,7 @@ import android.util.Base64
 import com.icc.silent_help.api.AlertRequest
 import com.icc.silent_help.api.AlertResponse
 import com.icc.silent_help.api.RetrofitClient
+import com.icc.silent_help.utils.UserPreferences
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -213,8 +214,11 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
         // Codificar audio a Base64
         val audioBase64 = encodeAudioToBase64(filePath)
 
+        // Obtener ID real del usuario
+        val realUserId = UserPreferences.getUserId(this) ?: "USUARIO_DESCONOCIDO"
+
         val request = AlertRequest(
-            userId = "ID_DEL_USUARIO_ACTUAL", // Idealmente obtener de preferencias/sesión
+            userId = realUserId,
             direccion = currentAddress,
             audio_url = audioUrl,
             audio_base64 = audioBase64,
