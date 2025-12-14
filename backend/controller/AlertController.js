@@ -2,12 +2,11 @@ import AlertModel from "../model/AlertModel.js";
 
 const createAlert = async (req, res) => {
     try {
-        const { userId, direccion, audio_url, audio_base64, startTime, endTime, duration, date } = req.body;
+        const { userId, direccion, audio_base64, startTime, endTime, duration, date } = req.body;
 
         const newAlert = new AlertModel({
             userId,
             direccion,
-            audio_url,
             audio_base64,
             startTime,
             endTime,

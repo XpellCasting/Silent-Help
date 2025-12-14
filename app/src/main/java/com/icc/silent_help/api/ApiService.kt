@@ -9,7 +9,6 @@ import retrofit2.http.Path
 data class AlertRequest(
     val userId: String,
     val direccion: String,
-    val audio_url: String,
     val audio_base64: String,
     val startTime: String, // "HH:mm:ss"
     val endTime: String,
