@@ -13,9 +13,28 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import android.os.PowerManager
 import com.google.android.material.chip.Chip
 import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
+import android.net.Uri
+import android.util.Log
+import android.util.Base64
+import com.icc.silent_help.api.AlertRequest
+import com.icc.silent_help.api.AlertResponse
+import com.icc.silent_help.api.AudioRequest
+import com.icc.silent_help.api.EndAlertRequest
+import com.icc.silent_help.api.RetrofitClient
+import com.icc.silent_help.utils.UserPreferences
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.io.File
+import java.io.FileInputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
 class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerListener {
 
@@ -38,6 +57,20 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
     private val timerHandler = Handler(Looper.getMainLooper())
     private lateinit var timerRunnable: Runnable
     private var startTime: Long = 0
+    private var endTime: Long = 0
+    
+    // --- Variables para grabación por fragmentos ---
+    private var currentAlertId: String? = null
+    private var isAlertActive: Boolean = false
+    private val recordingHandler = Handler(Looper.getMainLooper())
+    private var recordingDurationSeconds: Int = 120
+    private var isChunkRecording = false
+    
+    // --- Proximidad ---
+    private var wakeLock: PowerManager.WakeLock? = null
+    
+    // --- Flags de Estado ---
+    private var pendingFinalization = false
 
     companion object {
         private const val REQUEST_PERMISSIONS_CODE = 123
@@ -103,22 +136,132 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
             .build()
     }
 
+    
+    private fun setupProximitySensor() {
+        if (UserPreferences.isProximityEnabled(this)) {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+            if (powerManager.isWakeLockLevelSupported(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)) {
+                wakeLock = powerManager.newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, "SilentHelp:ProximityWakeLock")
+                wakeLock?.setReferenceCounted(false)
+                if (wakeLock?.isHeld == false) {
+                    wakeLock?.acquire(4 * 60 * 60 * 1000L) // 4 horas max
+                }
+            } else {
+                Toast.makeText(this, "Sensor de proximidad no soportado para apagar pantalla", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private fun releaseProximitySensor() {
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+        }
+    }
+
     private fun deactivateAlert() {
+        isAlertActive = false
         stopTimer()
-        audioHandler.stopRecording()
+        releaseProximitySensor()
+        endTime = System.currentTimeMillis()
+        
+        // Detener grabación si está activa.
+        // IMPORTANTE: Esto llamará a onRecordingStopped, pero como isAlertActive es false,
+        // esa función sabrá que es el último chunk.
+        if (isChunkRecording) {
+            audioHandler.stopRecording()
+        } else {
+             // Si no estaba grabando (ej: solo gps), finalizamos la alerta directamente aquí
+             finalizeAlertOnBackend()
+        }
+        
+        // Detener callbacks de grabación (el loop)
+        recordingHandler.removeCallbacksAndMessages(null)
+        
         Toast.makeText(this, "Alerta Detenida", Toast.LENGTH_SHORT).show()
-        finish()
+    }
+
+    private fun finalizeAlertOnBackend() {
+        if (currentAlertId == null) {
+            // Si el ID es nulo, significa que createInitialAlert aún no ha regresado.
+            // Marcamos flag para que, al regresar, se finalice automáticamente.
+            Log.d("HUD", "Finalización pendiente: Esperando ID de alerta...")
+            pendingFinalization = true
+            return
+        }
+
+        val durationMillis = endTime - startTime
+        val durationStr = formatTime(durationMillis)
+        val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        val endTimeStr = sdf.format(Date(endTime))
+
+        val request = EndAlertRequest(endTimeStr, durationStr)
+
+        RetrofitClient.instance.endAlert(currentAlertId!!, request).enqueue(object : Callback<AlertResponse> {
+            override fun onResponse(call: Call<AlertResponse>, response: Response<AlertResponse>) {
+                if (response.isSuccessful) {
+                    Log.d("API", "Alerta finalizada correctamente")
+                } else {
+                    Log.e("API", "Error al finalizar alerta: ${response.code()}")
+                }
+                finish() // Cierra la actividad solo después de intentar finalizar
+            }
+
+            override fun onFailure(call: Call<AlertResponse>, t: Throwable) {
+                Log.e("API", "Fallo al finalizar alerta: ${t.message}")
+                finish()
+            }
+        })
     }
 
     private fun startAlertProcess() {
         val permissions = arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.ACCESS_FINE_LOCATION)
         if (locationHandler.hasLocationPermission() && hasAudioPermission()) {
-            locationHandler.requestLocation()
-            audioHandler.startRecording()
+            isAlertActive = true
+            
+            // 1. Iniciar Ubicación (si está habilitado)
+            if (UserPreferences.isGpsEnabled(this)) {
+                locationHandler.requestLocation()
+            } else {
+                locationAddressTextView.text = "Ubicación desactivada por configuración"
+                locationPrecisionTextView.text = ""
+            }
+
+            // 2. Iniciar Timer Visual
             startTimer()
+            
+            // 3. Iniciar Grabación (si está habilitado)
+            if (UserPreferences.isMicEnabled(this)) {
+                recordingDurationSeconds = UserPreferences.getAudioDuration(this)
+                startAudioChunkLoop()
+            } else {
+                Toast.makeText(this, "Grabación desactivada por configuración", Toast.LENGTH_SHORT).show()
+                // Si no hay audio, al menos enviamos la alerta inicial sin audio o iniciamos proceso solo texto/ubicación
+                // Por ahora, llamamos a createInitialAlert directamente con audio vacio si queremos que se cree la alerta
+                createInitialAlert("") // Crea alerta sin audio
+            }
+
+            // 4. Activar Proximidad
+            setupProximitySensor()
+            
         } else {
             ActivityCompat.requestPermissions(this, permissions, REQUEST_PERMISSIONS_CODE)
         }
+    }
+
+    
+    private fun startAudioChunkLoop() {
+        if (!isAlertActive) return
+        
+        isChunkRecording = true
+        audioHandler.startRecording()
+        
+        // Programar detención del chunk
+        recordingHandler.postDelayed({
+            if (isAlertActive && isChunkRecording) {
+                audioHandler.stopRecording()
+                // onRecordingStopped se encargará de subir y llamar a startAudioChunkLoop de nuevo
+            }
+        }, recordingDurationSeconds * 1000L)
     }
 
     private fun hasAudioPermission(): Boolean {
@@ -147,6 +290,100 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
         return String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
 
+    private fun createInitialAlert(filePath: String) {
+        // Recuperar datos
+        val currentAddress = locationAddressTextView.text.toString()
+        val durationMillis = System.currentTimeMillis() - startTime // Duración hasta ahora
+        val durationStr = formatTime(durationMillis)
+        
+        // Formatear fechas
+        val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        val startTimeStr = sdf.format(Date(startTime))
+        val endTimeStr = sdf.format(Date()) // Hora actual como fin preliminar
+        
+        val dateSdf = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale.getDefault())
+        val dateStr = dateSdf.format(Date(startTime))
+
+        // Codificar audio a Base64 (puede ser vacío si filePath es "")
+        val audioBase64 = if (filePath.isNotEmpty()) encodeAudioToBase64(filePath) else ""
+
+        // Obtener ID real del usuario
+        val realUserId = UserPreferences.getUserId(this) ?: "USUARIO_DESCONOCIDO"
+
+        val request = AlertRequest(
+            userId = realUserId,
+            direccion = currentAddress,
+            audios = if (audioBase64.isNotEmpty()) listOf(audioBase64) else emptyList(),
+            startTime = startTimeStr,
+            endTime = endTimeStr,
+            date = dateStr,
+            duration = durationStr
+        )
+
+        Toast.makeText(this, "Iniciando alerta...", Toast.LENGTH_SHORT).show()
+
+        RetrofitClient.instance.createAlert(request).enqueue(object : Callback<AlertResponse> {
+            override fun onResponse(call: Call<AlertResponse>, response: Response<AlertResponse>) {
+                if (response.isSuccessful) {
+                    val alertResponse = response.body()
+                    currentAlertId = alertResponse?.alert?._id
+                    Toast.makeText(this@HudSensores, "Alerta creada. ID: $currentAlertId", Toast.LENGTH_SHORT).show()
+                    Log.d("API", "Alerta creada: ${alertResponse?.message}")
+                    
+                    // Si había una finalización pendiente (porque el usuario detuvo antes de tener ID)
+                    if (pendingFinalization) {
+                        finalizeAlertOnBackend()
+                    }
+                    
+                    // Si seguimos activos y era grabación por chunks, el loop continuará en onRecordingStopped
+                } else {
+                    Toast.makeText(this@HudSensores, "Error al crear alerta: ${response.code()}", Toast.LENGTH_LONG).show()
+                }
+            }
+
+            override fun onFailure(call: Call<AlertResponse>, t: Throwable) {
+                Toast.makeText(this@HudSensores, "Fallo de conexión: ${t.message}", Toast.LENGTH_LONG).show()
+            }
+        })
+    }
+
+    private fun sendAudioChunk(filePath: String) {
+        if (currentAlertId == null) {
+            Log.e("API", "No se puede enviar chunk: AlertID es nulo")
+            return
+        }
+
+        val audioBase64 = encodeAudioToBase64(filePath)
+        val request = AudioRequest(audio_base64 = audioBase64)
+        
+        Log.d("API", "Enviando chunk de audio...")
+        
+        RetrofitClient.instance.addAudio(currentAlertId!!, request).enqueue(object : Callback<AlertResponse> {
+            override fun onResponse(call: Call<AlertResponse>, response: Response<AlertResponse>) {
+                if (response.isSuccessful) {
+                    Log.d("API", "Chunk de audio enviado correctamente")
+                } else {
+                    Log.e("API", "Error al enviar chunk: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<AlertResponse>, t: Throwable) {
+                Log.e("API", "Fallo al enviar chunk: ${t.message}")
+            }
+        })
+    }
+
+    private fun encodeAudioToBase64(path: String): String {
+        return try {
+            val file = File(path)
+            val bytes = FileInputStream(file).use { it.readBytes() }
+            Base64.encodeToString(bytes, Base64.NO_WRAP)
+        } catch (e: Exception) {
+            Log.e("Base64", "Error encoding audio: ${e.message}")
+            ""
+        }
+    }
+
     // --- Callbacks de LocationHandlerListener ---
     override fun onLocationFound(address: String, precision: Float) {
         locationAddressTextView.text = address
@@ -165,7 +402,24 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
     }
 
     override fun onRecordingStopped(filePath: String) {
-        Toast.makeText(this, "Evidencia de audio guardada", Toast.LENGTH_SHORT).show()
+        isChunkRecording = false
+        
+        if (currentAlertId == null) {
+            // Es el primer chunk
+            createInitialAlert(filePath)
+        } else {
+            // Ya existe alerta, añadimos audio
+            sendAudioChunk(filePath)
+        }
+        
+        // Si la alerta sigue activa, iniciamos el siguiente loop inmediatamente
+        if (isAlertActive && UserPreferences.isMicEnabled(this)) {
+            startAudioChunkLoop()
+        } else if (!isAlertActive) {
+            // Si ya no está activa, significa que se llamó a deactivateAlert()
+            // Este fue el último chunk. Ahora debemos finalizar la alerta en el backend.
+            finalizeAlertOnBackend()
+        }
     }
 	
     override fun onPlayingStarted() { /* No se usa en esta pantalla */ }
@@ -193,5 +447,8 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
     override fun onStop() {
         super.onStop()
         audioHandler.releaseResources()
+        if (isFinishing) {
+            releaseProximitySensor()
+        }
     }
 }

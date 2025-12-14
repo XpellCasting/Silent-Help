@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import java.io.IOException
 import java.util.Locale
 
@@ -33,7 +34,8 @@ class LocationHandler(private val context: Context, private val listener: Locati
             return
         }
 
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+        // Cambiamos lastLocation por getCurrentLocation para forzar una actualización fresca
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null).addOnSuccessListener { location ->
             if (location != null) {
                 try {
                     val geocoder = Geocoder(context, Locale.getDefault())

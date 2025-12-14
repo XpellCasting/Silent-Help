@@ -5,7 +5,9 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.icc.silent_help.databinding.ActivityRegisterStep1Binding
+import com.icc.silent_help.ui.home.HomeActivity
 import com.icc.silent_help.utils.HttpHelper
+import com.icc.silent_help.utils.UserPreferences
 import org.json.JSONObject
 import android.util.Log
 
@@ -15,6 +17,16 @@ class RegisterStep1Activity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ✅ Verificar si el usuario ya está registrado usando UserPreferences
+        if (UserPreferences.isUserRegistered(this)) {
+            // Si ya está registrado, ir directamente a HomeActivity
+            val intent = Intent(this, HomeActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+            return
+        }
 
         // ✅ Inicializar binding
         binding = ActivityRegisterStep1Binding.inflate(layoutInflater)
@@ -42,7 +54,7 @@ class RegisterStep1Activity : AppCompatActivity() {
 
             // 🔹 Enviar la solicitud HTTP para generar el código SMS
             HttpHelper.post(
-                url = "http://10.0.2.2:3000/api/user/send-code", // ⚠️ Cambia por tu endpoint real
+                url = "http://192.168.1.12:3000/api/user/send-code", // ⚠️ Cambia por tu endpoint real
                 data = data
             ) { success, response ->
                 runOnUiThread {
@@ -60,6 +72,7 @@ class RegisterStep1Activity : AppCompatActivity() {
                             putExtra("email", emailUsuario)
                         }
                         startActivity(intent)
+                        finish()
                     } else {
                         Log.e("RegisterStep1Activity", "Error al enviar el código: $response")
 
