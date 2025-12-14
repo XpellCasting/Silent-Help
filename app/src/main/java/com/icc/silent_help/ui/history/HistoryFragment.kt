@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.icc.silent_help.R
 import com.icc.silent_help.models.AlertHistoryItem
-import com.icc.silent_help.api.AlertRequest
 import com.icc.silent_help.api.RetrofitClient
 import android.widget.Toast
 import retrofit2.Call
@@ -47,13 +46,12 @@ class HistoryFragment : Fragment() {
     private fun loadAlertHistory() {
         val userId = UserPreferences.getUserId(requireContext()) ?: "USUARIO_DESCONOCIDO"
 
-        RetrofitClient.instance.getAlerts(userId).enqueue(object : Callback<List<AlertRequest>> {
-            override fun onResponse(call: Call<List<AlertRequest>>, response: Response<List<AlertRequest>>) {
+        RetrofitClient.instance.getAlertsByUser(userId).enqueue(object : Callback<List<AlertHistoryItem>> {
+            override fun onResponse(call: Call<List<AlertHistoryItem>>, response: Response<List<AlertHistoryItem>>) {
                 if (response.isSuccessful) {
                     val alerts = response.body()
                     if (alerts != null) {
-                        val historyItems = alerts.map { mapToHistoryItem(it) }
-                        historyAdapter = HistoryAdapter(requireContext(), historyItems)
+                        historyAdapter = HistoryAdapter(requireContext(), alerts)
                         recyclerView.adapter = historyAdapter
                     }
                 } else {
@@ -61,21 +59,9 @@ class HistoryFragment : Fragment() {
                 }
             }
 
-            override fun onFailure(call: Call<List<AlertRequest>>, t: Throwable) {
+            override fun onFailure(call: Call<List<AlertHistoryItem>>, t: Throwable) {
                 Toast.makeText(context, "Fallo de conexión: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
-    }
-
-    private fun mapToHistoryItem(request: AlertRequest): AlertHistoryItem {
-        return AlertHistoryItem(
-            id = request.userId, // O usar un ID único generado si viene del backend
-            date = request.date,
-            time = request.startTime, // Asumiendo que startTime es "HH:mm:ss"
-            status = "Resuelto", // O mapear status real si viene del backend
-            duration = request.duration,
-            address = request.direccion,
-            audioBase64 = request.audio_base64
-        )
     }
 }

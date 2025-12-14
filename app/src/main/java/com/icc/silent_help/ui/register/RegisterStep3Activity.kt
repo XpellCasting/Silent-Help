@@ -11,6 +11,8 @@ import com.icc.silent_help.utils.UserPreferences
 import org.json.JSONObject
 import android.util.Log
 
+import com.icc.silent_help.api.RetrofitClient
+
 class RegisterStep3Activity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRegisterStep3Binding
@@ -50,7 +52,7 @@ class RegisterStep3Activity : AppCompatActivity() {
 
             // 🔹 Llamada HTTP al backend
             HttpHelper.post(
-                url = "http://10.0.2.2:3000/api/user/complete-register",
+                url = "${RetrofitClient.BASE_URL}api/user/complete-register",
                 data = data
             ) { success, response ->
                 runOnUiThread {

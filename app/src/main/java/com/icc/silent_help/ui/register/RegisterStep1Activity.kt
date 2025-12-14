@@ -11,6 +11,8 @@ import com.icc.silent_help.utils.UserPreferences
 import org.json.JSONObject
 import android.util.Log
 
+import com.icc.silent_help.api.RetrofitClient
+
 class RegisterStep1Activity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRegisterStep1Binding
@@ -52,11 +54,11 @@ class RegisterStep1Activity : AppCompatActivity() {
                 put("email", emailUsuario)
             }
 
-            // 🔹 Enviar la solicitud HTTP para generar el código SMS
-            HttpHelper.post(
-                url = "http://10.0.2.2:3000/api/user/send-code", // ⚠️ Cambia por tu endpoint real
-                data = data
-            ) { success, response ->
+        // 🔹 Llamada HTTP al backend para enviar código
+        HttpHelper.post(
+            url = "${RetrofitClient.BASE_URL}api/user/send-code",
+            data = data
+        ) { success, response ->
                 runOnUiThread {
                     if (success) {
                         Toast.makeText(

@@ -9,14 +9,12 @@ const AlertSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    direccion: {
-        type: String,
-        required: true
-    },
-    audio_base64: {
-        type: String,
-        required: false // Opcional por si solo queremos URL a futuro, pero lo enviaremos ahora
-    },
+    locationHistory: [{
+        latitude: { type: Number },
+        longitude: { type: Number },
+        timestamp: { type: Date, default: Date.now }
+    }],
+    audios: [{ type: String }],     // Lista de audios adicionales
     startTime: {
         type: String, // "HH:mm:ss"
         required: true

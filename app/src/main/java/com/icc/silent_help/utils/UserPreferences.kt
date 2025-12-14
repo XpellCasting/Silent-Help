@@ -20,6 +20,11 @@ object UserPreferences {
     private const val KEY_EMERGENCY_CONTACT_NAME = "emergencyContactName"
     private const val KEY_EMERGENCY_CONTACT_PHONE = "emergencyContactPhone"
     private const val KEY_REGISTRATION_DATE = "registrationDate"
+    private const val KEY_IS_GPS_ENABLED = "isGpsEnabled"
+    private const val KEY_IS_MIC_ENABLED = "isMicEnabled"
+    private const val KEY_IS_PROXIMITY_ENABLED = "isProximityEnabled"
+    private const val KEY_AUDIO_DURATION = "audioDuration"
+    private const val KEY_GPS_FREQUENCY = "gpsFrequency"
 
     private fun getPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -136,5 +141,47 @@ object UserPreferences {
             putString(KEY_EMERGENCY_CONTACT_PHONE, phone)
             apply()
         }
+    }
+
+    // --- Configuración de Sensores ---
+
+    fun setGpsEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_IS_GPS_ENABLED, enabled).apply()
+    }
+
+    fun isGpsEnabled(context: Context): Boolean {
+        return getPreferences(context).getBoolean(KEY_IS_GPS_ENABLED, true)
+    }
+
+    fun setMicEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_IS_MIC_ENABLED, enabled).apply()
+    }
+
+    fun isMicEnabled(context: Context): Boolean {
+        return getPreferences(context).getBoolean(KEY_IS_MIC_ENABLED, true)
+    }
+
+    fun setProximityEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_IS_PROXIMITY_ENABLED, enabled).apply()
+    }
+
+    fun isProximityEnabled(context: Context): Boolean {
+        return getPreferences(context).getBoolean(KEY_IS_PROXIMITY_ENABLED, true)
+    }
+
+    fun setAudioDuration(context: Context, durationSeconds: Int) {
+        getPreferences(context).edit().putInt(KEY_AUDIO_DURATION, durationSeconds).apply()
+    }
+
+    fun getAudioDuration(context: Context): Int {
+        return getPreferences(context).getInt(KEY_AUDIO_DURATION, 120)
+    }
+
+    fun setGpsFrequency(context: Context, frequencySeconds: Int) {
+        getPreferences(context).edit().putInt(KEY_GPS_FREQUENCY, frequencySeconds).apply()
+    }
+
+    fun getGpsFrequency(context: Context): Int {
+        return getPreferences(context).getInt(KEY_GPS_FREQUENCY, 10) // Por defecto 10 segundos
     }
 }

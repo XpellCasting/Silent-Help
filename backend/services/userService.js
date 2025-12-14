@@ -27,7 +27,7 @@ const userService = {
                 phoneNumber: cleanPhone,
                 code: verificationCode,
                 name: nombre,
-                email: email || '',
+                email: email || undefined,
                 isVerified: false
             });
             console.log("🔍 Estado de conexión Mongoose:", mongoose.connection.readyState);
@@ -189,7 +189,7 @@ const userService = {
             const newUser = new UserModel({
                 name: nombre,
                 phoneNumber: cleanPhone,
-                email: email || '',
+                email: email || undefined,
                 emergencyContacts: contactoEmergencia || []
             });
             const savedUser = await newUser.save();

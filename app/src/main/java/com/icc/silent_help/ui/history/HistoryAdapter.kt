@@ -61,9 +61,10 @@ class HistoryAdapter(
 
 
         holder.audioButton.setOnClickListener {
-            val audioBase64 = currentAlert.audioBase64
-            if (!audioBase64.isNullOrEmpty()) {
-                playBase64Audio(audioBase64)
+            val audios = currentAlert.audios
+
+            if (!audios.isNullOrEmpty()) {
+                playMultipleAudios(audios)
             } else {
                 Toast.makeText(context, "Audio no disponible", Toast.LENGTH_SHORT).show()
             }
@@ -73,6 +74,62 @@ class HistoryAdapter(
         }
         holder.evidenceButton.setOnClickListener {
             Toast.makeText(context, "Descargando evidencia de la alerta #${currentAlert.id}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun playMultipleAudios(audios: List<String>) {
+        try {
+            val audioFiles = ArrayList<File>()
+            
+            // 1. Decodificar todos los audios a archivos temporales
+            for ((index, base64String) in audios.withIndex()) {
+                if (base64String.isNotEmpty()) {
+                    val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+                    val tempFile = File.createTempFile("temp_audio_$index", ".3gp", context.cacheDir)
+                    val fos = FileOutputStream(tempFile)
+                    fos.write(decodedBytes)
+                    fos.close()
+                    audioFiles.add(tempFile)
+                }
+            }
+            
+            if (audioFiles.isEmpty()) {
+                Toast.makeText(context, "No se encontraron audios válidos", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            Toast.makeText(context, "Reproduciendo ${audioFiles.size} clips...", Toast.LENGTH_SHORT).show()
+            playAudioQueue(audioFiles, 0)
+
+        } catch (e: IOException) {
+            e.printStackTrace()
+            Toast.makeText(context, "Error al preparar audios", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun playAudioQueue(files: List<File>, currentIndex: Int) {
+        if (currentIndex >= files.size) {
+            Toast.makeText(context, "Reproducción finalizada", Toast.LENGTH_SHORT).show()
+            // Limpieza final de archivos
+            files.forEach { it.delete() }
+            return
+        }
+
+        try {
+            val mediaPlayer = MediaPlayer()
+            mediaPlayer.setDataSource(files[currentIndex].absolutePath)
+            mediaPlayer.prepare()
+            mediaPlayer.start()
+
+            mediaPlayer.setOnCompletionListener {
+                it.release()
+                // Reproducir el siguiente
+                playAudioQueue(files, currentIndex + 1)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Si falla uno, intentamos el siguiente
+            playAudioQueue(files, currentIndex + 1)
         }
     }
 
