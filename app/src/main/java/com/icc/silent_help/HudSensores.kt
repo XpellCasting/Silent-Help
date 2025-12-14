@@ -16,7 +16,6 @@ import androidx.fragment.app.FragmentActivity
 import com.google.android.material.chip.Chip
 import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
-import com.google.firebase.storage.FirebaseStorage
 import android.net.Uri
 import android.util.Log
 import android.util.Base64
@@ -165,38 +164,7 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
         return String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
 
-    private fun uploadAudioToFirebase(filePath: String) {
-        // 1. Mostrar un indicador de carga para que el usuario sepa que se está guardando
-        Toast.makeText(this, "Subiendo evidencia...", Toast.LENGTH_SHORT).show()
-        // Aquí podrías mostrar un ProgressBar en la UI si quisieras
-
-        // 2. Referencia a Firebase Storage
-        val storageRef = FirebaseStorage.getInstance().reference
-        val file = Uri.fromFile(File(filePath))
-
-        // Crea una ruta única: audios/usuario_id/nombre_archivo.3gp
-        val audioRef = storageRef.child("alertas/${UUID.randomUUID()}.3gp")
-
-        // 3. Subir el archivo
-        val uploadTask = audioRef.putFile(file)
-
-        uploadTask.addOnSuccessListener {
-            // 4. Si se sube bien, obtenemos la URL de descarga
-            audioRef.downloadUrl.addOnSuccessListener { uri ->
-                val downloadUrl = uri.toString()
-                Log.d("Firebase", "Audio subido: $downloadUrl")
-
-                // AQUI es donde envías los datos a tu MongoDB
-                sendAlertToBackend(downloadUrl, filePath)
-            }
-        }.addOnFailureListener { e ->
-            Toast.makeText(this, "Error al subir audio: ${e.message}", Toast.LENGTH_LONG).show()
-            // Aunque falle la subida, quizás quieras cerrar la app o guardar localmente
-            finish()
-        }
-    }
-
-    private fun sendAlertToBackend(audioUrl: String, filePath: String) {
+    private fun sendAlertToBackend(filePath: String) {
         // Recuperar datos
         val currentAddress = locationAddressTextView.text.toString()
         val durationMillis = endTime - startTime
@@ -220,7 +188,6 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
         val request = AlertRequest(
             userId = realUserId,
             direccion = currentAddress,
-            audio_url = audioUrl,
             audio_base64 = audioBase64,
             startTime = startTimeStr,
             endTime = endTimeStr,
@@ -280,7 +247,7 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
 
     override fun onRecordingStopped(filePath: String) {
         Toast.makeText(this, "Evidencia de audio guardada", Toast.LENGTH_SHORT).show()
-        uploadAudioToFirebase(filePath)
+        sendAlertToBackend(filePath)
     }
 	
     override fun onPlayingStarted() { /* No se usa en esta pantalla */ }

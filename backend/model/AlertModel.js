@@ -9,7 +9,7 @@ const AlertSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    audio_url: {
+    direccion: {
         type: String,
         required: true
     },
