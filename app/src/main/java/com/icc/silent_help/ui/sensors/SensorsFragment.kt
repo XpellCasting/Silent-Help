@@ -41,6 +41,7 @@ class SensorsFragment : Fragment() {
         // Cargar valores guardados
         val context = requireContext()
         sbRecordingDuration.progress = UserPreferences.getAudioDuration(context)
+        sbLocationInterval.progress = UserPreferences.getGpsFrequency(context) // Cargar frecuencia GPS
         switchGps.isChecked = UserPreferences.isGpsEnabled(context)
         switchMic.isChecked = UserPreferences.isMicEnabled(context)
         switchProximity.isChecked = UserPreferences.isProximityEnabled(context)
@@ -78,13 +79,21 @@ class SensorsFragment : Fragment() {
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        // Configurar listener para el intervalo de ubicación (Visual por ahora, o guardar si fuera necesario)
+        // Configurar listener para el intervalo de ubicación
         sbLocationInterval.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                tvLocationIntervalValue.text = "${progress}s"
+                // Asegurar mínimo razonable (ej. 5s)
+                val value = if (progress < 5) 5 else progress
+                tvLocationIntervalValue.text = "${value}s"
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                seekBar?.let {
+                    val value = if (it.progress < 5) 5 else it.progress
+                    if (it.progress < 5) it.progress = 5
+                    UserPreferences.setGpsFrequency(context, value)
+                }
+            }
         })
     }
 }

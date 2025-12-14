@@ -1,4 +1,6 @@
 import AlertModel from "../model/AlertModel.js";
+import UserModel from "../model/UserModel.js";
+import twilioService from "../services/twilio/twilioService.js";
 
 const createAlert = async (req, res) => {
     try {
@@ -16,9 +18,42 @@ const createAlert = async (req, res) => {
 
         await newAlert.save();
 
+        // 🔹 Notificar a contactos de emergencia
+        let notifiedContacts = [];
+        try {
+            const user = await UserModel.findById(userId);
+            console.log("👤 Usuario encontrado:", user ? user.name : "No encontrado");
+            if (user && user.emergencyContacts) {
+                 console.log(`📋 Contactos encontrados: ${user.emergencyContacts.length}`);
+                 user.emergencyContacts.forEach(c => console.log(`   - ${c.name}: ${c.phone}`));
+            }
+
+            if (user && user.emergencyContacts && user.emergencyContacts.length > 0) {
+                const contactPhones = user.emergencyContacts.map(contact => contact.phone);
+                
+                // Mensaje personalizado solicitado
+                const customMessage = "puede que me robaron manin";
+                
+                console.log(`Enviando alerta a ${contactPhones.length} contactos...`);
+                
+                const smsResult = await twilioService.sendEmergencyAlert(contactPhones, customMessage, {
+                    name: user.name,
+                    phone: user.phoneNumber,
+                    location: direccion
+                });
+
+                if (smsResult.success) {
+                    notifiedContacts = user.emergencyContacts.map(c => c.name);
+                }
+            }
+        } catch (smsError) {
+            console.error("Error enviando SMS de alerta:", smsError);
+        }
+
         res.status(201).json({
             message: "Alerta creada exitosamente",
-            alert: newAlert
+            alert: newAlert,
+            notifiedContacts: notifiedContacts
         });
     } catch (error) {
         console.error("Error al crear alerta:", error);
@@ -92,9 +127,45 @@ const endAlert = async (req, res) => {
     }
 };
 
+const updateLocation = async (req, res) => {
+    try {
+        const { alertId } = req.params;
+        const { latitude, longitude, direccion } = req.body;
+
+        if (latitude === undefined || longitude === undefined) {
+            return res.status(400).json({ message: "Faltan coordenadas (latitude, longitude)" });
+        }
+
+        const alert = await AlertModel.findById(alertId);
+        if (!alert) {
+            return res.status(404).json({ message: "Alerta no encontrada" });
+        }
+
+        // Actualizar dirección si se proporciona
+        if (direccion) {
+            alert.direccion = direccion;
+        }
+
+        // Agregar nueva ubicación al historial
+        alert.locationHistory.push({
+            latitude,
+            longitude,
+            timestamp: new Date()
+        });
+
+        await alert.save();
+
+        res.status(200).json({ message: "Ubicación actualizada correctamente" });
+    } catch (error) {
+        console.error("Error al actualizar ubicación:", error);
+        res.status(500).json({ message: "Error al actualizar ubicación", error });
+    }
+};
+
 export default {
     createAlert,
     getAlertsByUser,
     addAudioToAlert,
-    endAlert
+    endAlert,
+    updateLocation
 };
