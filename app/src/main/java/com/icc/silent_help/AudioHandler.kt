@@ -24,13 +24,16 @@ class AudioHandler(private val context: Context, private val listener: AudioHand
     private var isPlaying = false
 
     init {
-        // Define la ruta del archivo una sola vez
-        audioFilePath = "${context.externalCacheDir?.absolutePath}/audiorecord.3gp"
+        // Inicializar con un valor por defecto, aunque startRecording debería recibir el nombre
+        audioFilePath = "${context.externalCacheDir?.absolutePath}/audiorecord_init.3gp"
     }
 
-    fun startRecording() {
+    fun startRecording(customFileName: String? = null) {
         if (isRecording) return
         if (isPlaying) stopPlaying()
+
+        val fileName = customFileName ?: "audio_${System.currentTimeMillis()}.3gp"
+        audioFilePath = "${context.externalCacheDir?.absolutePath}/$fileName"
 
         mediaRecorder = MediaRecorder().apply {
             try {
@@ -52,7 +55,11 @@ class AudioHandler(private val context: Context, private val listener: AudioHand
 
     fun stopRecording() {
         if (isRecording) {
-            mediaRecorder?.stop()
+            try {
+                mediaRecorder?.stop()
+            } catch (e: RuntimeException) {
+                // Manejar crash si se para inmediatamente después de empezar
+            }
             releaseMediaRecorder()
             isRecording = false
             audioFilePath?.let { listener.onRecordingStopped(it) }

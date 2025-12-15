@@ -273,7 +273,9 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
         if (!isAlertActive) return
         
         isChunkRecording = true
-        audioHandler.startRecording()
+        // Generar nombre único usando timestamp
+        val fileName = "audio_${System.currentTimeMillis()}.3gp"
+        audioHandler.startRecording(fileName)
         
         // Programar detención del chunk
         recordingHandler.postDelayed({
@@ -429,7 +431,8 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
     }
 
     // --- Callbacks de LocationHandlerListener ---
-    override fun onLocationFound(address: String, precision: Float) {
+    // --- Callbacks de LocationHandlerListener ---
+    override fun onLocationFound(address: String, precision: Float, latitude: Double, longitude: Double) {
         locationAddressTextView.text = address
         locationPrecisionTextView.text = "Precisión: ±${precision.toInt()} metros"
         
@@ -438,15 +441,23 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
             alertCreationHandler.removeCallbacksAndMessages(null) // Cancelar el timeout
             createInitialAlert("") // createInitialAlert tomará el texto actual del TextView
             isInitialAlertCreated = true
-        }
+        } else if (currentAlertId != null) {
+            // Si la alerta ya existe pero tenía dirección provisional, la actualizamos AHORA MISMO
+            Log.d("HUD", "Dirección encontrada: $address. Enviando update inmediato...")
+            val request = LocationUpdateRequest(latitude, longitude, address)
+            RetrofitClient.instance.updateLocation(currentAlertId!!, request).enqueue(object : Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        Log.d("API", "Dirección corregida exitosamente")
+                    } else {
+                        Log.e("API", "Error al corregir dirección: ${response.code()}")
+                    }
+                }
 
-        // Si ya tenemos ID de alerta, actualizamos la dirección en el backend inmediatamente
-        if (currentAlertId != null) {
-            // Nota: No tenemos lat/long aquí fácilmente sin guardarlos, pero podemos esperar al siguiente update
-            // O idealmente, LocationHandler debería pasar lat/long a onLocationFound o viceversa.
-            // Por simplicidad, solo actualizamos la UI y dejamos que el próximo onLocationUpdate lo envíe,
-            // pero como onLocationUpdate es por intervalo, podría tardar.
-            // Mejor opción: Si LocationHandler guarda la última ubicación, podríamos usarla.
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    Log.e("API", "Fallo al corregir dirección: ${t.message}")
+                }
+            })
         }
     }
 
@@ -497,12 +508,20 @@ class HudSensores : FragmentActivity(), AudioHandlerListener, LocationHandlerLis
             // Si el ID aún no está listo, guardamos el audio en cola
             Log.d("HUD", "Alert ID pendiente. Audio en cola: $filePath")
             pendingAudioFiles.add(filePath)
+            // IMPORTANTE: Si estamos en cola, hay que reiniciar el loop manualmente aquí si sigue activo
+            if (isAlertActive) {
+                // startAudioChunkLoop ya hace chequeos, solo lo llamamos
+                startAudioChunkLoop()
+            }
         } else {
             // Ya existe alerta, enviamos audio directamente
             sendAudioChunk(filePath)
+            // El loop se reinicia DESPUÉS de enviar? No, mejor reiniciar YA para no perder tiempo
+            if (isAlertActive) {
+                // Reiniciar el loop inmediatamente para el siguiente chunk
+                startAudioChunkLoop()
+            }
         }
-        
-        // NOTA: Eliminamos el bucle startAudioChunkLoop() para que solo grabe una vez
         
         if (!isAlertActive) {
             finalizeAlertOnBackend()
