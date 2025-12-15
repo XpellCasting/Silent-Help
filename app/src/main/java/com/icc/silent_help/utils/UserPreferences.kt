@@ -20,6 +20,7 @@ object UserPreferences {
     private const val KEY_EMERGENCY_CONTACT_NAME = "emergencyContactName"
     private const val KEY_EMERGENCY_CONTACT_PHONE = "emergencyContactPhone"
     private const val KEY_REGISTRATION_DATE = "registrationDate"
+    private const val KEY_IS_SYSTEM_ARMED = "isSystemArmed" // Nueva clave
     private const val KEY_IS_GPS_ENABLED = "isGpsEnabled"
     private const val KEY_IS_MIC_ENABLED = "isMicEnabled"
     private const val KEY_IS_PROXIMITY_ENABLED = "isProximityEnabled"
@@ -28,6 +29,20 @@ object UserPreferences {
 
     private fun getPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
+
+    /**
+     * Guarda el estado del sistema (armado/desarmado)
+     */
+    fun setSystemArmed(context: Context, isArmed: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_IS_SYSTEM_ARMED, isArmed).apply()
+    }
+
+    /**
+     * Verifica si el sistema está armado
+     */
+    fun isSystemArmed(context: Context): Boolean {
+        return getPreferences(context).getBoolean(KEY_IS_SYSTEM_ARMED, false)
     }
 
     /**

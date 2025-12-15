@@ -88,12 +88,17 @@ class HomeFragment : Fragment() {
         btnDeactivateSystem = view.findViewById(R.id.btn_deactivate_system)
         btnAddContact = view.findViewById(R.id.btn_add_contact)
 
+        // Cargar el estado del sistema desde las preferencias
+        isSystemArmed = UserPreferences.isSystemArmed(requireContext())
+
         btnArmSystem.setOnClickListener {
             isSystemArmed = true
+            UserPreferences.setSystemArmed(requireContext(), true)
             updateSystemStatusUI()
         }
         btnDeactivateSystem.setOnClickListener {
             isSystemArmed = false
+            UserPreferences.setSystemArmed(requireContext(), false)
             updateSystemStatusUI()
         }
 

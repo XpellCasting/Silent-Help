@@ -7,63 +7,53 @@ import android.os.Looper
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import com.icc.silent_help.HudSensores
+import com.icc.silent_help.utils.UserPreferences
 
 class EmergencyKeyService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var isVolumeUpPressed = false
     private var isVolumeDownPressed = false
-    private val pressTimeout = 500L // 500 ms para presionar ambos botones
+    private val longPressDuration = 3000L // 3 segundos
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // No necesitamos procesar otros eventos de accesibilidad
-    }
+    private val longPressRunnable = Runnable { triggerEmergencyAlarm() }
+
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
 
     override fun onInterrupt() {
-        // El servicio fue interrumpido
+        cancelLongPress()
     }
 
     override fun onKeyEvent(event: KeyEvent?): Boolean {
+        // Si el sistema no está armado, no hacemos nada
+        if (!UserPreferences.isSystemArmed(this)) {
+            return super.onKeyEvent(event)
+        }
+
         event ?: return super.onKeyEvent(event)
 
         val keyCode = event.keyCode
         val action = event.action
 
         if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-            if (action == KeyEvent.ACTION_DOWN) {
-                isVolumeUpPressed = true
-                checkCombination()
-                // Reset after a timeout to avoid sticky presses
-                handler.postDelayed({ isVolumeUpPressed = false }, pressTimeout)
-            } else {
-                isVolumeUpPressed = false
-            }
+            isVolumeUpPressed = (action == KeyEvent.ACTION_DOWN)
+        } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            isVolumeDownPressed = (action == KeyEvent.ACTION_DOWN)
         }
 
-        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            if (action == KeyEvent.ACTION_DOWN) {
-                isVolumeDownPressed = true
-                checkCombination()
-                // Reset after a timeout
-                handler.postDelayed({ isVolumeDownPressed = false }, pressTimeout)
-            } else {
-                isVolumeDownPressed = false
-            }
+        if (isVolumeUpPressed && isVolumeDownPressed) {
+            // Si ambos botones están presionados, iniciamos el temporizador
+            handler.postDelayed(longPressRunnable, longPressDuration)
+        } else {
+            // Si alguno se suelta, cancelamos el temporizador
+            cancelLongPress()
         }
 
-        // No consumimos el evento, para que el volumen siga funcionando normalmente
         return super.onKeyEvent(event)
     }
 
-    private fun checkCombination() {
-        if (isVolumeUpPressed && isVolumeDownPressed) {
-            // ¡Combinación detectada!
-            triggerEmergencyAlarm()
-
-            // Reseteamos los estados para evitar múltiples activaciones
-            isVolumeUpPressed = false
-            isVolumeDownPressed = false
-        }
+    private fun cancelLongPress() {
+        handler.removeCallbacks(longPressRunnable)
     }
 
     private fun triggerEmergencyAlarm() {
@@ -71,5 +61,14 @@ class EmergencyKeyService : AccessibilityService() {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         startActivity(intent)
+        
+        // Una vez activada, reseteamos el estado para evitar reactivaciones
+        isVolumeUpPressed = false
+        isVolumeDownPressed = false
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cancelLongPress()
     }
 }
