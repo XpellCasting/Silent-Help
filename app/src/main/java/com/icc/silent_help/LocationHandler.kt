@@ -14,7 +14,7 @@ import java.util.Locale
 
 // Interfaz para comunicar eventos de ubicación a la Activity
 interface LocationHandlerListener {
-    fun onLocationFound(address: String, precision: Float)
+    fun onLocationFound(address: String, precision: Float, latitude: Double, longitude: Double)
     fun onLocationError(message: String)
     fun onLocationUpdate(latitude: Double, longitude: Double)
 }
@@ -48,7 +48,7 @@ class LocationHandler(private val context: Context, private val listener: Locati
                     } else {
                         "No se encontró la dirección."
                     }
-                    listener.onLocationFound(addressText, location.accuracy)
+                    listener.onLocationFound(addressText, location.accuracy, location.latitude, location.longitude)
                 } catch (e: IOException) {
                     Log.e("GeocoderError", "Servicio no disponible", e)
                     listener.onLocationError("Error al obtener la dirección")
@@ -89,7 +89,7 @@ class LocationHandler(private val context: Context, private val listener: Locati
                             
                             // Volver al hilo principal para actualizar UI
                             android.os.Handler(Looper.getMainLooper()).post {
-                                listener.onLocationFound(addressText, location.accuracy)
+                                listener.onLocationFound(addressText, location.accuracy, location.latitude, location.longitude)
                             }
                         } catch (e: Exception) {
                             Log.e("LocationHandler", "Error en Geocoding: ${e.message}")

@@ -43,7 +43,11 @@ class RegisterStep1Activity : AppCompatActivity() {
 
             // 🔹 Validación de campos
             if (nombreUsuario.isBlank() || telefonoUsuario.isBlank() || !terminosCheck) {
-                Toast.makeText(this, "Por favor completa los campos obligatorios", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Por favor completa los campos obligatorios",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return@setOnClickListener
             }
 
@@ -54,11 +58,11 @@ class RegisterStep1Activity : AppCompatActivity() {
                 put("email", emailUsuario)
             }
 
-        // 🔹 Llamada HTTP al backend para enviar código
-        HttpHelper.post(
-            url = "${RetrofitClient.BASE_URL}api/user/send-code",
-            data = data
-        ) { success, response ->
+            // 🔹 Llamada HTTP al backend para enviar código
+            HttpHelper.post(
+                url = "${RetrofitClient.BASE_URL}api/user/send-code",
+                data = data
+            ) { success, response ->
                 runOnUiThread {
                     if (success) {
                         Toast.makeText(
@@ -77,7 +81,13 @@ class RegisterStep1Activity : AppCompatActivity() {
                         finish()
                     } else {
                         Log.e("RegisterStep1Activity", "Error al enviar el código: $response")
-
+                        runOnUiThread {
+                            Toast.makeText(
+                                this@RegisterStep1Activity,
+                                "Error: $response",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     }
                 }
             }

@@ -63,6 +63,16 @@
                 android:orientation="vertical"
                 android:padding="20dp">
 
+                <!-- Botón Importar -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_import_contact"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Importar desde Contactos"
+                    android:layout_marginBottom="16dp"
+                    app:iconGravity="textStart" />
+
                 <!-- Nombre del contacto -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
