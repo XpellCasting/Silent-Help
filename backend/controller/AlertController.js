@@ -24,26 +24,34 @@ const createAlert = async (req, res) => {
             const user = await UserModel.findById(userId);
             console.log("👤 Usuario encontrado:", user ? user.name : "No encontrado");
             if (user && user.emergencyContacts) {
-                 console.log(`📋 Contactos encontrados: ${user.emergencyContacts.length}`);
-                 user.emergencyContacts.forEach(c => console.log(`   - ${c.name}: ${c.phone}`));
+                console.log(`📋 Contactos encontrados: ${user.emergencyContacts.length}`);
+                user.emergencyContacts.forEach(c => console.log(`   - ${c.name}: ${c.phone}`));
             }
 
             if (user && user.emergencyContacts && user.emergencyContacts.length > 0) {
-                const contactPhones = user.emergencyContacts.map(contact => contact.phone);
-                
-                // Mensaje personalizado solicitado
-                const customMessage = "puede que me robaron manin";
-                
-                console.log(`Enviando alerta a ${contactPhones.length} contactos...`);
-                
-                const smsResult = await twilioService.sendEmergencyAlert(contactPhones, customMessage, {
-                    name: user.name,
-                    phone: user.phoneNumber,
-                    location: direccion
-                });
+                // VERIFICACIÓN: Solo enviar SMS si la dirección es REAL.
+                // Si es "Ubicación en proceso...", esperamos a updateLocation.
+                const isProvisional = direccion && (direccion.includes("proceso") || direccion.includes("Buscando"));
 
-                if (smsResult.success) {
-                    notifiedContacts = user.emergencyContacts.map(c => c.name);
+                if (!isProvisional) {
+                    const contactPhones = user.emergencyContacts.map(contact => contact.phone);
+
+                    // Mensaje personalizado solicitado
+                    const customMessage = "puede que me robaron manin";
+
+                    console.log(`Enviando alerta a ${contactPhones.length} contactos...`);
+
+                    const smsResult = await twilioService.sendEmergencyAlert(contactPhones, customMessage, {
+                        name: user.name,
+                        phone: user.phoneNumber,
+                        location: direccion
+                    });
+
+                    if (smsResult.success) {
+                        notifiedContacts = user.emergencyContacts.map(c => c.name);
+                    }
+                } else {
+                    console.log("⏳ Dirección provisional detectada. SMS pospuesto hasta tener ubicación real.");
                 }
             }
         } catch (smsError) {
@@ -141,6 +149,15 @@ const updateLocation = async (req, res) => {
             return res.status(404).json({ message: "Alerta no encontrada" });
         }
 
+        // Verificar si debemos notificar actualización de ubicación (Solo si pasa de "Proceso" a Real)
+        let shouldNotifyUpdate = false;
+        if (direccion && alert.direccion &&
+            (alert.direccion.includes("proceso") || alert.direccion.includes("Buscando"))) {
+            if (!direccion.includes("proceso") && !direccion.includes("Buscando")) {
+                shouldNotifyUpdate = true;
+            }
+        }
+
         // Actualizar dirección si se proporciona
         if (direccion) {
             alert.direccion = direccion;
@@ -154,6 +171,28 @@ const updateLocation = async (req, res) => {
         });
 
         await alert.save();
+
+        // Enviar SMS de actualización si corresponde
+        if (shouldNotifyUpdate) {
+            try {
+                const user = await UserModel.findById(alert.userId);
+                if (user && user.emergencyContacts && user.emergencyContacts.length > 0) {
+                    const contactPhones = user.emergencyContacts.map(c => c.phone);
+                    console.log(`📍 Ubicación corregida. Enviando ALERTA REAL a ${contactPhones.length} contactos.`);
+
+                    // Usamos el mensaje original porque este ES el primer mensaje real que reciben
+                    const alertMessage = "puede que me robaron manin";
+
+                    await twilioService.sendEmergencyAlert(contactPhones, alertMessage, {
+                        name: user.name,
+                        phone: user.phoneNumber,
+                        location: direccion
+                    });
+                }
+            } catch (notifyError) {
+                console.error("Error enviando SMS de actualización:", notifyError);
+            }
+        }
 
         res.status(200).json({ message: "Ubicación actualizada correctamente" });
     } catch (error) {
