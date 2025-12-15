@@ -4,4 +4,5 @@
     <string name="title_history">Historial</string>
     <string name="title_biometrics">Biometría</string>
     <string name="title_sensors">Sensores</string>
+    <string name="accessibility_service_description">Permite activar la alarma de emergencia presionando los botones de volumen. SilentHelp necesita este permiso para escuchar los botones incluso cuando la app está cerrada.</string>
 </resources>

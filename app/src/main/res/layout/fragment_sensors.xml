@@ -32,11 +32,64 @@
             android:layout_marginBottom="24dp"
             android:textColor="?android:attr/textColorSecondary"/>
 
+        <!-- Botón de Pánico Físico -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Botón de Pánico Físico"
+            android:textStyle="bold"
+            android:textColor="@color/textColor"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/cardBackgroundColor"
+            android:padding="16dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switch_physical_panic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"/>
+
+                <TextView
+                    android:id="@+id/tv_physical_panic_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_toStartOf="@id/switch_physical_panic"
+                    android:layout_marginEnd="16dp"
+                    android:text="Activar con botones de volumen"
+                    android:textColor="@color/textColor"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/tv_physical_panic_title"
+                    android:layout_alignParentStart="true"
+                    android:layout_toStartOf="@id/switch_physical_panic"
+                    android:layout_marginEnd="16dp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:text="Presiona ambos botones de volumen simultáneamente para activar la alarma."/>
+
+            </RelativeLayout>
+        </LinearLayout>
+
         <!-- Sensores Principales -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Sensores principales"
+            android:layout_marginTop="24dp"
             android:textStyle="bold"
             android:textColor="@color/textColor"
             android:textSize="18sp"
@@ -360,7 +413,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:min="1"
-                    android:max="60"/>
+                    android:max="15"/>
 
                 <TextView
                     android:layout_width="wrap_content"
