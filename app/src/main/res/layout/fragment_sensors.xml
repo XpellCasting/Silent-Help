@@ -32,11 +32,11 @@
             android:layout_marginBottom="24dp"
             android:textColor="?android:attr/textColorSecondary"/>
 
-        <!-- Botón de Pánico Físico -->
+        <!-- Alarma por agitación -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Botón de Pánico Físico"
+            android:text="Alarma por Agitación"
             android:textStyle="bold"
             android:textColor="@color/textColor"
             android:textSize="18sp"
@@ -54,32 +54,32 @@
                 android:layout_height="wrap_content">
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_physical_panic"
+                    android:id="@+id/switch_shake_alarm"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"/>
 
                 <TextView
-                    android:id="@+id/tv_physical_panic_title"
+                    android:id="@+id/tv_shake_alarm_title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
-                    android:layout_toStartOf="@id/switch_physical_panic"
+                    android:layout_toStartOf="@id/switch_shake_alarm"
                     android:layout_marginEnd="16dp"
-                    android:text="Activar con botones de volumen"
+                    android:text="Activar con agitación"
                     android:textColor="@color/textColor"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/tv_physical_panic_title"
+                    android:layout_below="@id/tv_shake_alarm_title"
                     android:layout_alignParentStart="true"
-                    android:layout_toStartOf="@id/switch_physical_panic"
+                    android:layout_toStartOf="@id/switch_shake_alarm"
                     android:layout_marginEnd="16dp"
                     android:textColor="?android:attr/textColorSecondary"
-                    android:text="Presiona ambos botones de volumen simultáneamente para activar la alarma."/>
+                    android:text="Agita el teléfono bruscamente para activar la alarma de emergencia."/>
 
             </RelativeLayout>
         </LinearLayout>

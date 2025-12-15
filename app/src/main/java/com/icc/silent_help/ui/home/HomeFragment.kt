@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -22,6 +23,7 @@ import com.icc.silent_help.ContactsAdapter
 import com.icc.silent_help.EmergencyContact
 import com.icc.silent_help.HudSensores
 import com.icc.silent_help.R
+import com.icc.silent_help.services.ShakeDetectionService
 import com.icc.silent_help.ui.contacts.AddEmergencyContactActivity
 import com.icc.silent_help.api.RetrofitClient
 import com.icc.silent_help.utils.HttpHelper
@@ -57,8 +59,13 @@ class HomeFragment : Fragment() {
     ) { permissions ->
         val audioGranted = permissions[Manifest.permission.RECORD_AUDIO] ?: false
         val locationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val notificationsGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
+        } else {
+            true
+        }
 
-        if (audioGranted && locationGranted) {
+        if (audioGranted && locationGranted && notificationsGranted) {
             Log.d("HomeFragment", "Permisos concedidos")
         } else {
             Toast.makeText(requireContext(), "Se requieren permisos para el funcionamiento completo", Toast.LENGTH_SHORT).show()
@@ -90,16 +97,21 @@ class HomeFragment : Fragment() {
 
         // Cargar el estado del sistema desde las preferencias
         isSystemArmed = UserPreferences.isSystemArmed(requireContext())
+        if (isSystemArmed) {
+            startShakeDetection()
+        }
 
         btnArmSystem.setOnClickListener {
             isSystemArmed = true
             UserPreferences.setSystemArmed(requireContext(), true)
             updateSystemStatusUI()
+            startShakeDetection()
         }
         btnDeactivateSystem.setOnClickListener {
             isSystemArmed = false
             UserPreferences.setSystemArmed(requireContext(), false)
             updateSystemStatusUI()
+            stopShakeDetection()
         }
 
         btnActivateAlert.setOnClickListener {
@@ -114,6 +126,16 @@ class HomeFragment : Fragment() {
 
         updateSystemStatusUI()
         loadEmergencyContactsFromDatabase()
+    }
+
+    private fun startShakeDetection() {
+        val intent = Intent(activity, ShakeDetectionService::class.java)
+        activity?.startService(intent)
+    }
+
+    private fun stopShakeDetection() {
+        val intent = Intent(activity, ShakeDetectionService::class.java)
+        activity?.stopService(intent)
     }
 
     private fun updateSystemStatusUI() {
@@ -154,6 +176,7 @@ class HomeFragment : Fragment() {
         HttpHelper.get(
             url = "${RetrofitClient.BASE_URL}api/user/emergency-contacts/$userPhone"
         ) { success, response ->
+            if (!isAdded) return@get
             requireActivity().runOnUiThread {
                 if (success) {
                     try {
@@ -268,6 +291,7 @@ class HomeFragment : Fragment() {
         HttpHelper.delete(
             url = "${RetrofitClient.BASE_URL}api/user/emergency-contacts/$userPhone/${contact.id}"
         ) { success, response ->
+            if (!isAdded) return@delete
             requireActivity().runOnUiThread {
                 if (success) {
                     try {
@@ -307,11 +331,15 @@ class HomeFragment : Fragment() {
     }
 
     private fun checkAndRequestPermissions() {
-        val permissions = arrayOf(
+        val permissions = mutableListOf(
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
 
         val permissionsToRequest = permissions.filter {
             ContextCompat.checkSelfPermission(requireContext(), it) != android.content.pm.PackageManager.PERMISSION_GRANTED
